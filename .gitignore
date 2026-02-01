@@ -228,3 +228,11 @@ records/*
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+
+
+
+outputs/
+data/processed/
+__pycache__/
+.venv/
+*.pyc
