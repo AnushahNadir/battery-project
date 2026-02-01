@@ -1,4 +1,10 @@
 # src/pipeline/schema.py
+"""
+Canonical schema + synonym dictionary.
+
+- Keys in SYNONYMS_* are the ONLY canonical column names allowed downstream.
+- Values are raw column name variants (case/spacing differences, abbreviations, etc.)
+"""
 
 SYNONYMS_META = {
     "battery_id": ["battery_id", "Battery", "battery", "cell_id"],
@@ -14,10 +20,10 @@ SYNONYMS_META = {
 }
 
 SYNONYMS_TS = {
+    "time": ["Time", "time", "t"],
     "voltage_measured": ["Voltage_measured", "voltage_measured", "V_measured"],
     "current_measured": ["Current_measured", "current_measured", "I_measured"],
     "temperature_measured": ["Temperature_measured", "temperature_measured", "T_measured"],
     "current_load": ["Current_load", "current_load", "I_load"],
     "voltage_load": ["Voltage_load", "voltage_load", "V_load"],
-    "time": ["Time", "time", "t"],
 }

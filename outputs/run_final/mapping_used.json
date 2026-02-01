@@ -1,0 +1,12 @@
+{
+  "battery_id": "battery_id",
+  "type": "type",
+  "start_time": "start_time",
+  "ambient_temperature": "ambient_temperature",
+  "test_id": "test_id",
+  "uid": "uid",
+  "filename": "filename",
+  "Capacity": "capacity",
+  "Re": "Re",
+  "Rct": "Rct"
+}

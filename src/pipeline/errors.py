@@ -1,0 +1,2 @@
+class DatasetRejectedError(Exception):
+    pass

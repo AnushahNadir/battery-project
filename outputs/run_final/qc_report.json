@@ -1,0 +1,31 @@
+{
+  "rows_total": 2794,
+  "ts_found": 2794,
+  "ts_missing": 0,
+  "ts_missing_rate": 0.0,
+  "columns": [
+    "battery_id",
+    "cycle_index",
+    "filename",
+    "capacity",
+    "init_capacity",
+    "eol_capacity_threshold",
+    "eol_cycle",
+    "RUL",
+    "duration_s",
+    "temp_mean",
+    "temp_max",
+    "v_min",
+    "v_mean",
+    "v_end",
+    "v_col_used",
+    "i_mean",
+    "i_min",
+    "i_col_used",
+    "energy_j",
+    "ah_est",
+    "ts_found",
+    "ts_path"
+  ],
+  "rul_missing": 0
+}
