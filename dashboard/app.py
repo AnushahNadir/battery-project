@@ -1,428 +1,815 @@
-﻿import json
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Battery AI Co-Scientist", page_icon="🔋", layout="wide")
-st.title("🔋 Battery AI Co-Scientist Dashboard")
+st.set_page_config(
+    page_title="Battery AI Co-Scientist",
+    page_icon="🔋",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-BASE_DIR = Path('.').resolve()
-DATA_PATH = BASE_DIR / 'data/processed/cycle_features_with_rul.csv'
-MODEL_DIR = BASE_DIR / 'data/processed/modeling'
-
-ANOMALY_PATH     = MODEL_DIR / 'anomalies.json'
-UNCERTAINTY_PATH = MODEL_DIR / 'uncertainty_estimates.json'
-SURVIVAL_PATH    = MODEL_DIR / 'survival_risk_predictions.csv'
-REPORT_PATH      = MODEL_DIR / 'final_system_report.md'
-
-
-@st.cache_data
-def load_json(path: Path):
-    if not path.exists():
-        return None
-    return json.loads(path.read_text(encoding='utf-8'))
-
+# ── paths ─────────────────────────────────────────────────────────────────────
+BASE  = Path(".").resolve()
+MDL   = BASE / "data/processed/modeling"
+TM    = BASE / "trained_models"
 
 @st.cache_data
-def load_csv(path: Path):
-    if not path.exists():
-        return pd.DataFrame()
-    return pd.read_csv(path)
+def load_json(p):
+    p = Path(p)
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
+@st.cache_data
+def load_csv(p):
+    p = Path(p)
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
-df         = load_csv(DATA_PATH)
-anomalies  = load_json(ANOMALY_PATH) or []
-uncertainty = load_json(UNCERTAINTY_PATH) or []
-survival   = load_csv(SURVIVAL_PATH)
-
-st.caption('Read-only decision-support dashboard. No automated battery control is performed.')
-
-# -- Artifact status ---------------------------------------------------------
-status_rows = [
-    {'artifact': 'cycle_features_with_rul.csv',    'exists': DATA_PATH.exists()},
-    {'artifact': 'anomalies.json',                 'exists': ANOMALY_PATH.exists()},
-    {'artifact': 'uncertainty_estimates.json',     'exists': UNCERTAINTY_PATH.exists()},
-    {'artifact': 'survival_risk_predictions.csv',  'exists': SURVIVAL_PATH.exists()},
-    {'artifact': 'final_system_report.md',         'exists': REPORT_PATH.exists()},
-]
-
-col_a, col_b, col_c, col_d = st.columns(4)
-col_a.metric('Cycles',           int(len(df))         if not df.empty         else 0)
-col_b.metric('Anomalies',        int(len(anomalies)))
-col_c.metric('Uncertainty rows', int(len(uncertainty)))
-col_d.metric('Survival rows',    int(len(survival)))
-
-st.subheader('Artifact Status')
-st.dataframe(pd.DataFrame(status_rows), use_container_width=True, hide_index=True)
-
-if df.empty:
-    st.error('Missing processed cycle dataset. Run preprocessing first.')
-    st.stop()
+# ── load all artifacts ────────────────────────────────────────────────────────
+df          = load_csv(BASE / "data/processed/cycle_features_with_rul.csv")
+uncertainty = load_json(MDL / "uncertainty_estimates.json") or []
+anomalies   = load_json(MDL / "anomalies.json") or []
+survival    = load_csv(MDL / "survival_risk_predictions.csv")
+metrics     = load_json(TM  / "model_metrics.json") or {}
+conformal   = load_json(MDL / "conformal_coverage_report.json") or {}
+feat_imp    = load_json(MDL / "feature_importance.json") or []
+drift       = load_json(MDL / "drift_report.json") or {}
+hypotheses  = load_json(MDL / "degradation_hypotheses.json") or []
+counterfact = load_json(MDL / "counterfactual_examples.json") or []
+unc_metrics = load_json(MDL / "uncertainty_metrics.json") or {}
+cv_report   = load_json(MDL / "groupkfold_cv_report.json") or {}
+manifest    = load_json(MDL / "manifest.json") or {}
+report_path = MDL / "final_system_report.md"
 
 u_df = pd.DataFrame(uncertainty)
 a_df = pd.DataFrame(anomalies)
 
-if not a_df.empty:
-    if "battery_id" in a_df.columns:
-        a_df["battery_id"] = a_df["battery_id"].astype(str)
-    if "cycle_index" in a_df.columns:
-        a_df["cycle_index"] = pd.to_numeric(a_df["cycle_index"], errors="coerce")
-
-# -- Resolve RUL column name robustly ----------------------------------------
-# Pipeline writes 'rul_ensemble_mean'; older runs may use 'rul_median' or
-# 'rul_ensemble'.  Accept whichever is present.
-RUL_COL_CANDIDATES = ['rul_ensemble_mean', 'rul_median', 'rul_ensemble',
-                       'rul_ml', 'rul_pred']
-rul_col = next(
-    (c for c in RUL_COL_CANDIDATES if not u_df.empty and c in u_df.columns),
-    None,
+RUL_COL = next(
+    (c for c in ["rul_ensemble_mean","rul_median","rul_ensemble","rul_ml","rul_pred"]
+     if not u_df.empty and c in u_df.columns), None
 )
-has_uncertainty = rul_col is not None
-has_rul_bands   = has_uncertainty and {'rul_lower_5', 'rul_upper_95'}.issubset(u_df.columns)
+has_bands = RUL_COL is not None and {"rul_lower_5","rul_upper_95"}.issubset(u_df.columns)
 
-battery_options = sorted(df['battery_id'].dropna().astype(str).unique())
+# ── temperature group helper ──────────────────────────────────────────────────
+def temp_group(bid):
+    n = int("".join(filter(str.isdigit, str(bid))) or 0)
+    if 41 <= n <= 56: return "cold"
+    if (29 <= n <= 32) or (38 <= n <= 40): return "hot"
+    return "room"
 
-# -- Battery selector --------------------------------------------------------
-selected_battery = st.selectbox('Battery ID (single-battery views)', battery_options, index=0)
+GROUP_COLOR = {"room": "#2E8648", "hot": "#C0392B", "cold": "#007A8A"}
+GROUP_LABEL = {"room": "Room (~24°C)", "hot": "Hot (43°C)", "cold": "Cold (<10°C)"}
 
-all_ids = battery_options
-id_sets = [set(all_ids)]
-if has_uncertainty and 'battery_id' in u_df.columns:
-    id_sets.append(set(u_df['battery_id'].dropna().astype(str)))
-if not survival.empty and 'battery_id' in survival.columns:
-    id_sets.append(set(survival['battery_id'].dropna().astype(str)))
-shared_ids = sorted(set.intersection(*id_sets)) if id_sets else []
+battery_ids = sorted(df["battery_id"].dropna().astype(str).unique()) if not df.empty else []
 
-st.caption(
-    f'Battery coverage: total={len(all_ids)} · '
-    f'uncertainty={len(set(u_df["battery_id"].dropna().astype(str))) if has_uncertainty and "battery_id" in u_df.columns else 0} · '
-    f'survival={len(set(survival["battery_id"].dropna().astype(str))) if not survival.empty and "battery_id" in survival.columns else 0} · '
-    f'intersection={len(shared_ids)}'
-)
+# ── sidebar navigation ────────────────────────────────────────────────────────
+st.sidebar.title("🔋 Battery AI Co-Scientist")
+st.sidebar.caption(f"Pipeline run: {manifest.get('completed_at','—')[:19] if manifest else '—'}")
+st.sidebar.markdown("---")
 
-df_b = df[df['battery_id'].astype(str) == selected_battery].sort_values('cycle_index')
+SECTIONS = [
+    "📊  Executive Summary",
+    "🤖  Model Performance",
+    "📐  Conformal Coverage",
+    "🔍  Battery Deep Dive",
+    "⚠️  Risk Distribution",
+    "📡  Drift Monitoring",
+    "💡  Reasoning & Hypotheses",
+    "📋  Final Report",
+]
+section = st.sidebar.radio("Go to", SECTIONS, label_visibility="collapsed")
 
-# -- Multi-battery comparison -------------------------------------------------
-st.subheader('Battery Comparison (Multi-select)')
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Key Numbers**")
+st.sidebar.metric("XGBoost RMSE", f"{metrics.get('rmse', 0):.2f} cycles")
+st.sidebar.metric("Conformal Coverage", f"{unc_metrics.get('coverage_90_percent', 0):.1f}%", delta="target 90%")
+st.sidebar.metric("Anomalies", len(anomalies))
+st.sidebar.markdown("---")
+st.sidebar.caption("Read-only decision-support tool. Not for safety-critical use.")
 
-compare_ids = st.multiselect(
-    'Compare batteries side-by-side',
-    options=battery_options,
-    default=battery_options,   # all batteries selected by default
-    key='compare_ids_v2',
-)
-st.caption(f'Selected for comparison: {len(compare_ids)}/{len(battery_options)} batteries')
 
-if compare_ids:
+# ══════════════════════════════════════════════════════════════════════════════
+# 1 · EXECUTIVE SUMMARY
+# ══════════════════════════════════════════════════════════════════════════════
+if section == SECTIONS[0]:
+    st.title("📊 Executive Summary")
+    st.caption("The most important numbers from the full pipeline run — at a glance.")
 
-    # -- Shared colour palette ---------------------------------------------
-    # Use a qualitative palette that stays legible at 34 lines.
-    # Cycle through tab20 + tab20b to get up to 40 distinct colours.
-    _cmap1 = [cm.tab20(i)  for i in range(20)]
-    _cmap2 = [cm.tab20b(i) for i in range(20)]
-    _palette = _cmap1 + _cmap2
-    colour_map = {bid: _palette[i % len(_palette)] for i, bid in enumerate(battery_options)}
-
-    max_cycle_selected = 0
-    for bid in compare_ids:
-        d_max = pd.to_numeric(
-            df[df['battery_id'].astype(str) == str(bid)]['cycle_index'],
-            errors='coerce',
-        ).max()
-        if pd.notna(d_max):
-            max_cycle_selected = max(max_cycle_selected, int(d_max))
-
-    # -- Capacity degradation overlay --------------------------------------
-    fig_cmp, ax_cmp = plt.subplots(figsize=(12, 5))
-    plotted_capacity = []
-    total_anomaly_points = 0
-    for bid in compare_ids:
-        d = df[df['battery_id'].astype(str) == str(bid)].sort_values('cycle_index')
-        if d.empty:
-            continue
-        d_plot = d.copy()
-        d_plot["cycle_index"] = pd.to_numeric(d_plot["cycle_index"], errors="coerce")
-        d_plot["capacity"] = pd.to_numeric(d_plot["capacity"], errors="coerce")
-        d_plot = d_plot.dropna(subset=["cycle_index", "capacity"])
-        if d_plot.empty:
-            continue
-        ax_cmp.plot(d_plot['cycle_index'], d_plot['capacity'],
-                    linewidth=1.5, color=colour_map[bid], label=str(bid))
-        plotted_capacity.append(str(bid))
-
-        if {'battery_id', 'cycle_index'}.issubset(a_df.columns):
-            an_bid = a_df[a_df["battery_id"] == str(bid)].copy()
-            if not an_bid.empty:
-                an_cycles = set(pd.to_numeric(an_bid["cycle_index"], errors="coerce").dropna().astype(int).tolist())
-                d_plot["cycle_int"] = d_plot["cycle_index"].astype(int)
-                marked = d_plot[d_plot["cycle_int"].isin(an_cycles)]
-                if not marked.empty:
-                    total_anomaly_points += int(len(marked))
-                    ax_cmp.scatter(
-                        marked["cycle_index"],
-                        marked["capacity"],
-                        color="red",
-                        marker="o",
-                        s=16,
-                        alpha=0.9,
-                        zorder=5,
-                    )
-
-    ax_cmp.set_xlabel('Cycle')
-    ax_cmp.set_ylabel('Capacity (Ahr)')
-    ax_cmp.set_title('Degradation Curve Overlay — All Selected Batteries')
-    ax_cmp.grid(True, alpha=0.3)
-    if len(compare_ids) <= 20:
-        ax_cmp.legend(loc='upper right', fontsize=7, ncol=2)
-    else:
-        ax_cmp.legend(loc='upper right', fontsize=6, ncol=3, framealpha=0.7)
-    st.pyplot(fig_cmp)
-
-    missing_capacity = [b for b in compare_ids if str(b) not in plotted_capacity]
-    st.caption(
-        f'Capacity overlay: {len(plotted_capacity)}/{len(compare_ids)} batteries plotted'
-        + (f' · missing: {", ".join(missing_capacity)}' if missing_capacity else '')
-    )
-    if {'battery_id', 'cycle_index'}.issubset(a_df.columns):
-        st.caption(f'Anomaly markers plotted on overlay: {total_anomaly_points}')
-
-    # -- RUL trajectory overlay --------------------------------------------
-    st.caption(
-        f'RUL source: **{rul_col}** from uncertainty_estimates.json where available, '
-        f'otherwise raw RUL labels from cycle_features_with_rul.csv.'
-        if has_uncertainty else
-        'uncertainty_estimates.json not found — showing raw RUL labels only.'
+    # Verdict banner
+    verdict_line = ""
+    if report_path.exists():
+        for line in report_path.read_text(encoding="utf-8").splitlines():
+            if "Overall Verdict" in line:
+                verdict_line = line.replace("**", "").replace("Overall Verdict:", "").strip()
+                break
+    verdict_color = "#2E8648" if "PASS" in verdict_line and "CONDITIONAL" not in verdict_line else \
+                    "#E68A00" if "CONDITIONAL" in verdict_line else "#C0392B"
+    st.markdown(
+        f"""<div style='background:{verdict_color}22;border-left:6px solid {verdict_color};
+        padding:14px 20px;border-radius:6px;margin-bottom:20px'>
+        <span style='font-size:1.3em;font-weight:700;color:{verdict_color}'>
+        Overall Verdict: {verdict_line or "—"}</span></div>""",
+        unsafe_allow_html=True,
     )
 
-    show_rul_bands = st.checkbox(
-        'Show RUL uncertainty bands (5%–95%)',
-        value=False,           # off by default when many batteries are shown
-        key='comparison_rul_bands',
-        disabled=not has_rul_bands,
-        help='Bands are clearest when ≤ 6 batteries are selected.',
+    # Top metrics row
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1.metric("XGBoost RMSE",   f"{metrics.get('rmse',0):.2f}",        "cycles  (target <100)")
+    c2.metric("TCN RMSE",       f"{metrics.get('dl_sequence',{}).get('rmse',0):.2f}", "cycles")
+    c3.metric("Stat. Baseline", f"{metrics.get('baseline_rmse',0):.1f}","cycles (excluded)")
+    c4.metric("Coverage",       f"{unc_metrics.get('coverage_90_percent',0):.1f}%",   "target 90%")
+    c5.metric("Anomalies",      str(len(anomalies)),                    "test cycles flagged")
+    c6.metric("Test batteries", str(len(metrics.get("split_metadata",{}).get("test_batteries",[]))), "never seen in training")
+
+    st.markdown("---")
+
+    # Stage-by-stage verdict table
+    st.subheader("Stage-by-Stage Results")
+    stage_rows = []
+    if report_path.exists():
+        lines = report_path.read_text(encoding="utf-8").splitlines()
+        for line in lines:
+            for kw in ["Stage 3","Stage 4:","Stage 4.2","Stage 4.5","Stage 5","Stage 6"]:
+                if line.startswith(f"### {kw}"):
+                    label = line.replace("###","").strip()
+                    verdict = "PASS" if "PASS" in label and "CONDITIONAL" not in label else \
+                              "CONDITIONAL PASS" if "CONDITIONAL" in label else \
+                              "FAIL" if "FAIL" in label else "—"
+                    stage_rows.append({"Stage": label.split(" - ")[0].strip(),
+                                       "Verdict": verdict})
+    if stage_rows:
+        sdf = pd.DataFrame(stage_rows)
+        def color_verdict(val):
+            c = "#d4edda" if val=="PASS" else "#fff3cd" if "CONDITIONAL" in val else "#f8d7da"
+            return f"background-color:{c}"
+        st.dataframe(sdf.style.applymap(color_verdict, subset=["Verdict"]),
+                     use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+    # Risk distribution summary
+    st.subheader("Risk Category Distribution (all 2,790 observations)")
+    risk_dist = unc_metrics.get("risk_distribution", {})
+    if risk_dist:
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            total = sum(risk_dist.values())
+            for cat, color in [("HIGH","#C0392B"),("MEDIUM","#E68A00"),("LOW","#2E8648")]:
+                n = risk_dist.get(cat, 0)
+                pct = 100 * n / total if total else 0
+                st.markdown(
+                    f"<div style='background:{color}22;border-left:5px solid {color};"
+                    f"padding:10px 14px;border-radius:4px;margin-bottom:8px'>"
+                    f"<b style='color:{color}'>{cat}</b>  "
+                    f"<span style='font-size:1.4em;font-weight:700'>{n}</span>"
+                    f"<span style='color:#888'> rows ({pct:.1f}%)</span></div>",
+                    unsafe_allow_html=True,
+                )
+        with col2:
+            fig, ax = plt.subplots(figsize=(5, 3.5))
+            cats   = ["LOW", "MEDIUM", "HIGH"]
+            vals   = [risk_dist.get(c,0) for c in cats]
+            colors = ["#2E8648","#E68A00","#C0392B"]
+            bars = ax.bar(cats, vals, color=colors, edgecolor="white", width=0.5)
+            for b, v in zip(bars, vals):
+                ax.text(b.get_x()+b.get_width()/2, b.get_height()+10,
+                        str(v), ha="center", fontsize=10, fontweight="bold")
+            ax.set_ylabel("Observations"); ax.set_title("Risk Category Counts")
+            ax.grid(axis="y", alpha=0.3); ax.spines[["top","right"]].set_visible(False)
+            st.pyplot(fig); plt.close(fig)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 2 · MODEL PERFORMANCE
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[1]:
+    st.title("🤖 Model Performance")
+
+    # RMSE comparison
+    st.subheader("RMSE Comparison — All Three Models")
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        ml_rmse   = metrics.get("rmse", 0)
+        dl_rmse   = metrics.get("dl_sequence", {}).get("rmse", 0)
+        stat_rmse = metrics.get("baseline_rmse", 0)
+        fig, ax = plt.subplots(figsize=(7, 3.8))
+        models = ["Statistical\nBaseline\n(Exponential)", "TCN\n(Deep Learning)", "XGBoost\n(ML) ✓"]
+        vals   = [stat_rmse, dl_rmse, ml_rmse]
+        colors = ["#C0392B", "#007A8A", "#2E8648"]
+        bars = ax.bar(models, vals, color=colors, edgecolor="white", width=0.5)
+        ax.axhline(100, color="#1F3A5F", lw=2, ls="--", label="Pass threshold (100 cycles)")
+        for b, v in zip(bars, vals):
+            ax.text(b.get_x()+b.get_width()/2, b.get_height()+4,
+                    f"{v:.1f}", ha="center", fontsize=11, fontweight="bold")
+        ax.set_ylabel("RMSE (cycles)"); ax.set_title("Lower = better")
+        ax.legend(); ax.grid(axis="y", alpha=0.3)
+        ax.spines[["top","right"]].set_visible(False)
+        st.pyplot(fig); plt.close(fig)
+    with col2:
+        st.markdown("#### What these numbers mean")
+        st.markdown(
+            "**RMSE** = how many cycles off the model is on average.\n\n"
+            f"- **XGBoost: {ml_rmse:.2f} cycles** — best model, well below the 100-cycle pass threshold\n"
+            f"- **TCN: {dl_rmse:.2f} cycles** — deep learning sequence model, close second\n"
+            f"- **Statistical: {stat_rmse:.0f} cycles** — physics model, too inaccurate to use for predictions. "
+            f"Excluded from the ensemble.\n\n"
+            "The ensemble combines XGBoost (53.7%) + TCN (46.3%) using inverse-RMSE weighting."
+        )
+
+    st.markdown("---")
+
+    # Feature importance
+    st.subheader("What Does the Model Rely On? — Feature Importance")
+    if feat_imp:
+        fi_df = pd.DataFrame(feat_imp).sort_values("importance", ascending=True)
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        colors_fi = ["#1F3A5F" if v > 0.10 else "#007A8A" if v > 0.07 else "#AAAAAA"
+                     for v in fi_df["importance"]]
+        bars = ax.barh(fi_df["feature"], fi_df["importance"], color=colors_fi, edgecolor="white")
+        for b, v in zip(bars, fi_df["importance"]):
+            ax.text(v+0.002, b.get_y()+b.get_height()/2, f"{v:.3f}", va="center", fontsize=9)
+        ax.set_xlabel("Feature Importance (XGBoost gain)")
+        ax.set_title("Higher = model relies on this feature more")
+        ax.spines[["top","right"]].set_visible(False)
+        st.pyplot(fig); plt.close(fig)
+        st.caption(
+            "Top features: **energy_j** (total energy per cycle), **i_min** (minimum current), "
+            "**v_mean** (mean voltage). These capture both how hard the battery is working "
+            "and how degraded it already is."
+        )
+
+    st.markdown("---")
+
+    # Cross-validation
+    st.subheader("Cross-Validation — Honest Accuracy Estimate")
+    st.markdown(
+        "A single train/test split can be lucky. GroupKFold CV splits all 22 training batteries "
+        "into 5 groups and tests each group in turn. The CV RMSE is a more conservative, "
+        "more realistic accuracy estimate."
     )
-    if not has_rul_bands and has_uncertainty:
-        st.caption('rul_lower_5 / rul_upper_95 columns not found in uncertainty_estimates.json.')
+    if cv_report and "folds" in cv_report:
+        folds_df = pd.DataFrame(cv_report["folds"])[
+            ["fold_index","n_train_batteries","n_val_batteries","rmse","mae"]
+        ].rename(columns={"fold_index":"Fold","n_train_batteries":"Train batteries",
+                          "n_val_batteries":"Val batteries","rmse":"RMSE","mae":"MAE"})
+        folds_df["RMSE"] = folds_df["RMSE"].round(2)
+        folds_df["MAE"]  = folds_df["MAE"].round(2)
 
-    fig_rul, ax_rul = plt.subplots(figsize=(12, 5))
-    plotted_rul_ids   = []
-    fallback_rul_ids  = []
-    missing_rul_ids   = []
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.dataframe(folds_df, use_container_width=True, hide_index=True)
+        with col2:
+            mean_cv = cv_report.get("mean_rmse", 0)
+            std_cv  = cv_report.get("std_rmse", 0)
+            st.metric("CV Mean RMSE", f"{mean_cv:.2f} ± {std_cv:.2f}")
+            st.metric("Holdout test RMSE", f"{ml_rmse:.2f}")
+            ratio = mean_cv / ml_rmse if ml_rmse else 0
+            st.metric("CV / Test ratio", f"{ratio:.1f}×",
+                      delta="warning: test set easier than average" if ratio > 1.5 else "OK",
+                      delta_color="inverse" if ratio > 1.5 else "normal")
 
-    for bid in compare_ids:
-        col  = colour_map[bid]
-        used_uncertainty = False
+    # Per-battery RMSE
+    st.markdown("---")
+    st.subheader("Per-Battery RMSE — Test Set")
+    pb = metrics.get("per_battery_rmse", {})
+    if pb:
+        pb_df = pd.DataFrame([{"Battery": k, "RMSE": round(v,2),
+                                "Temp Group": temp_group(k)} for k,v in pb.items()])
+        pb_df = pb_df.sort_values("RMSE")
+        fig, ax = plt.subplots(figsize=(7, 3.5))
+        bar_colors = [GROUP_COLOR[temp_group(b)] for b in pb_df["Battery"]]
+        bars = ax.bar(pb_df["Battery"], pb_df["RMSE"], color=bar_colors, edgecolor="white", width=0.5)
+        for b, v in zip(bars, pb_df["RMSE"]):
+            ax.text(b.get_x()+b.get_width()/2, b.get_height()+0.3,
+                    f"{v:.1f}", ha="center", fontsize=9, fontweight="bold")
+        patches = [mpatches.Patch(color=c, label=f"{g} — {GROUP_LABEL[g]}")
+                   for g, c in GROUP_COLOR.items()]
+        ax.legend(handles=patches, fontsize=8)
+        ax.set_ylabel("RMSE (cycles)"); ax.set_title("Per-battery prediction error on test set")
+        ax.grid(axis="y", alpha=0.3); ax.spines[["top","right"]].set_visible(False)
+        st.pyplot(fig); plt.close(fig)
 
-        # -- Try uncertainty estimates first -------------------------------
-        if has_uncertainty and 'battery_id' in u_df.columns:
-            u_b = u_df[u_df['battery_id'].astype(str) == str(bid)].sort_values('cycle_index')
-            if not u_b.empty:
-                x = pd.to_numeric(u_b['cycle_index'], errors='coerce')
-                y = pd.to_numeric(u_b[rul_col],       errors='coerce')
-                valid = x.notna() & y.notna()
-                if valid.any():
-                    ax_rul.plot(x[valid], y[valid],
-                                linewidth=1.8, color=col, label=str(bid))
-                    used_uncertainty = True
-                    plotted_rul_ids.append(str(bid))
 
-                    if show_rul_bands and has_rul_bands:
-                        lo = pd.to_numeric(u_b['rul_lower_5'],  errors='coerce')
-                        hi = pd.to_numeric(u_b['rul_upper_95'], errors='coerce')
-                        vb = x.notna() & lo.notna() & hi.notna()
-                        if vb.any():
-                            ax_rul.fill_between(x[vb], lo[vb], hi[vb],
-                                                color=col, alpha=0.12, linewidth=0)
+# ══════════════════════════════════════════════════════════════════════════════
+# 3 · CONFORMAL COVERAGE
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[2]:
+    st.title("📐 Conformal Coverage")
+    st.markdown(
+        "Conformal prediction wraps the XGBoost model and guarantees that the true RUL "
+        "falls inside the predicted interval at least **90% of the time**. "
+        "A separate calibration margin (q_hat) is fitted per temperature group."
+    )
 
-        # -- Fallback: raw RUL labels --------------------------------------
-        if not used_uncertainty:
-            d_b = df[df['battery_id'].astype(str) == str(bid)].sort_values('cycle_index')
-            rul_label_col = 'RUL' if 'RUL' in d_b.columns else (
-                'rul' if 'rul' in d_b.columns else None
+    overall = conformal.get("overall_empirical_coverage", 0)
+    target  = conformal.get("target_coverage", 0.9)
+    per_grp = conformal.get("per_group", {})
+
+    # Overall banner
+    color = "#2E8648" if overall >= target else "#C0392B"
+    st.markdown(
+        f"<div style='background:{color}22;border-left:6px solid {color};"
+        f"padding:14px 20px;border-radius:6px;margin-bottom:20px'>"
+        f"<span style='font-size:1.3em;font-weight:700;color:{color}'>"
+        f"Overall empirical coverage: {overall*100:.1f}%</span>"
+        f"<span style='color:#555'>  (target: {target*100:.0f}%)</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    # Per-group cards
+    cols = st.columns(3)
+    for i, grp in enumerate(["room","hot","cold"]):
+        g = per_grp.get(grp, {})
+        emp     = g.get("empirical_coverage", 0)
+        q_hat   = g.get("q_hat", 0)
+        strat   = g.get("strategy", "—")
+        gap     = g.get("gap_vs_target", 0)
+        ok      = emp >= target
+        c       = GROUP_COLOR[grp]
+        badge   = "✓ Above target" if ok else "✗ Below target"
+        b_color = "#2E8648" if ok else "#C0392B"
+        with cols[i]:
+            st.markdown(
+                f"<div style='border:2px solid {c};border-radius:10px;padding:16px;'>"
+                f"<div style='color:{c};font-weight:700;font-size:1.1em'>{grp.upper()} — {GROUP_LABEL[grp]}</div>"
+                f"<div style='font-size:2.5em;font-weight:700;margin:8px 0'>{emp*100:.1f}%</div>"
+                f"<div style='color:#555;font-size:0.9em'>q_hat = {q_hat:.2f} cycles</div>"
+                f"<div style='color:#555;font-size:0.9em'>Strategy: <b>{strat.upper()}</b></div>"
+                f"<div style='color:#555;font-size:0.9em'>Gap vs target: {gap*100:+.1f}%</div>"
+                f"<div style='color:{b_color};font-weight:700;margin-top:8px'>{badge}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
             )
-            if rul_label_col and not d_b.empty:
-                x = pd.to_numeric(d_b['cycle_index'],      errors='coerce')
-                y = pd.to_numeric(d_b[rul_label_col],      errors='coerce')
-                valid = x.notna() & y.notna()
-                if valid.any():
-                    ax_rul.plot(x[valid], y[valid],
-                                linewidth=1.5, color=col, linestyle='--',
-                                alpha=0.85, label=f'{bid} (label)')
-                    fallback_rul_ids.append(str(bid))
-                else:
-                    missing_rul_ids.append(str(bid))
+
+    st.markdown("---")
+
+    # LOBO explanation
+    st.subheader("Why LOBO for Cold Batteries?")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            "Cold batteries behave differently and there are only **3 cold calibration batteries**. "
+            "With so few examples, standard split conformal under-covers cold batteries.\n\n"
+            "**LOBO (Leave-One-Battery-Out)** fixes this by:\n"
+            "1. For each cold battery, temporarily remove it\n"
+            "2. Refit the model without it\n"
+            "3. Score the error on the removed battery\n"
+            "4. This gives errors representative of a truly unseen cold battery\n\n"
+            "Result: cold coverage improved from **87.3% → 91.2%** ✓"
+        )
+    with col2:
+        # Ablation comparison chart
+        ablation = load_json(TM / "conformal_ablation.json")
+        if ablation:
+            methods = ablation.get("methods", {})
+            groups  = ["room","hot","cold"]
+            x       = np.arange(len(groups))
+            w       = 0.25
+            fig, ax = plt.subplots(figsize=(6, 4))
+            for j, (mname, mcolor) in enumerate([
+                ("Global split","#888888"),
+                ("Stratified split","#007A8A"),
+                ("Stratified LOBO","#2E8648"),
+            ]):
+                m = methods.get(mname, {})
+                vals = [m.get("per_group",{}).get(g,{}).get("empirical_coverage",0)*100
+                        for g in groups]
+                ax.bar(x + j*w - w, vals, w, label=mname, color=mcolor, edgecolor="white")
+            ax.axhline(90, color="#C0392B", lw=2, ls="--", label="Target 90%")
+            ax.set_xticks(x); ax.set_xticklabels([g.capitalize() for g in groups])
+            ax.set_ylabel("Empirical Coverage (%)"); ax.set_ylim(82, 105)
+            ax.set_title("Ablation: Global vs Stratified vs LOBO")
+            ax.legend(fontsize=8); ax.grid(axis="y", alpha=0.3)
+            ax.spines[["top","right"]].set_visible(False)
+            st.pyplot(fig); plt.close(fig)
+        else:
+            st.info("conformal_ablation.json not found in trained_models/.")
+
+    st.markdown("---")
+    st.subheader("What is q_hat?")
+    st.markdown(
+        "q_hat is the margin added/subtracted around each prediction to form the interval:\n\n"
+        "**[ prediction − q_hat ,  prediction + q_hat ]**\n\n"
+        f"- Room: q_hat = {per_grp.get('room',{}).get('q_hat',0):.1f} cycles\n"
+        f"- Hot: q_hat = {per_grp.get('hot',{}).get('q_hat',0):.1f} cycles (inflated ×1.2 — only 1 hot cal battery)\n"
+        f"- Cold: q_hat = {per_grp.get('cold',{}).get('q_hat',0):.1f} cycles (LOBO-calibrated)\n\n"
+        "A larger q_hat means the model needs a wider margin to stay accurate for that group."
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 4 · BATTERY DEEP DIVE
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[3]:
+    st.title("🔍 Battery Deep Dive")
+
+    if df.empty:
+        st.error("No cycle data found. Run preprocessing first."); st.stop()
+
+    # ── battery selector ──────────────────────────────────────────────────────
+    col_sel, col_info = st.columns([2, 3])
+    with col_sel:
+        selected = st.selectbox("Select a battery", battery_ids)
+    grp = temp_group(selected)
+    with col_info:
+        st.markdown(
+            f"<div style='background:{GROUP_COLOR[grp]}22;border-left:5px solid {GROUP_COLOR[grp]};"
+            f"padding:10px 16px;border-radius:6px;margin-top:8px'>"
+            f"<b style='color:{GROUP_COLOR[grp]}'>{selected}</b> — "
+            f"{GROUP_LABEL[grp]}</div>",
+            unsafe_allow_html=True,
+        )
+
+    df_b = df[df["battery_id"].astype(str)==selected].sort_values("cycle_index")
+
+    # Quick stats
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("Total cycles",    len(df_b))
+    c2.metric("Initial capacity",f"{df_b['capacity'].iloc[0]:.3f} Ah" if len(df_b) else "—")
+    c3.metric("Final capacity",  f"{df_b['capacity'].iloc[-1]:.3f} Ah" if len(df_b) else "—")
+    n_anom = len(a_df[a_df["battery_id"].astype(str)==selected]) if not a_df.empty else 0
+    c4.metric("Anomalies flagged", n_anom)
+
+    st.markdown("---")
+
+    # ── chart 1: capacity degradation + anomalies ─────────────────────────────
+    st.subheader("Capacity Degradation + Anomaly Flags")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    color = GROUP_COLOR[grp]
+    ax.plot(df_b["cycle_index"], df_b["capacity"], color=color, lw=2, label="Capacity (Ah)")
+    eol = df_b["eol_capacity_threshold"].iloc[0] if "eol_capacity_threshold" in df_b.columns else 1.6
+    ax.axhline(eol, color="#C0392B", lw=1.5, ls="--", label=f"EOL threshold ({eol:.2f} Ah)")
+
+    if not a_df.empty and "battery_id" in a_df.columns:
+        an_b = a_df[a_df["battery_id"].astype(str)==selected].copy()
+        if not an_b.empty:
+            an_b["cycle_index"] = pd.to_numeric(an_b["cycle_index"], errors="coerce")
+            merged = df_b.merge(an_b[["cycle_index"]].drop_duplicates(), on="cycle_index", how="inner")
+            if not merged.empty:
+                ax.scatter(merged["cycle_index"], merged["capacity"],
+                           color="red", s=40, zorder=5, label=f"Anomaly ({len(merged)})")
+
+    ax.set_xlabel("Cycle"); ax.set_ylabel("Capacity (Ah)")
+    ax.set_title(f"Battery {selected} — Capacity Fade")
+    ax.legend(); ax.grid(alpha=0.3); ax.spines[["top","right"]].set_visible(False)
+    st.pyplot(fig); plt.close(fig)
+
+    st.markdown("---")
+
+    # ── chart 2: RUL prediction + conformal interval ──────────────────────────
+    st.subheader("RUL Prediction with 90% Conformal Interval")
+    if RUL_COL and not u_df.empty and "battery_id" in u_df.columns:
+        u_b = u_df[u_df["battery_id"].astype(str)==selected].sort_values("cycle_index")
+        if not u_b.empty:
+            show_bands = st.checkbox("Show uncertainty bands (5th–95th percentile)", value=True)
+            fig, ax = plt.subplots(figsize=(10, 4))
+            x   = pd.to_numeric(u_b["cycle_index"], errors="coerce")
+            y   = pd.to_numeric(u_b[RUL_COL], errors="coerce")
+            ax.plot(x, y, color=color, lw=2, label="Predicted RUL")
+            if "RUL" in df_b.columns:
+                ax.plot(df_b["cycle_index"], df_b["RUL"], color="#1F3A5F",
+                        lw=1.5, ls="--", alpha=0.7, label="True RUL")
+            if show_bands and has_bands:
+                lo = pd.to_numeric(u_b["rul_lower_5"],  errors="coerce")
+                hi = pd.to_numeric(u_b["rul_upper_95"], errors="coerce")
+                ax.fill_between(x, lo, hi, alpha=0.2, color=color, label="90% conformal interval")
+            ax.axhline(0, color="#C0392B", lw=1, ls=":", alpha=0.5)
+            ax.set_xlabel("Cycle"); ax.set_ylabel("RUL (cycles)")
+            ax.set_title(f"Battery {selected} — RUL Trajectory")
+            ax.set_ylim(bottom=0); ax.legend(); ax.grid(alpha=0.3)
+            ax.spines[["top","right"]].set_visible(False)
+            st.pyplot(fig); plt.close(fig)
+        else:
+            st.info("No uncertainty data for this battery.")
+    else:
+        st.info("uncertainty_estimates.json not loaded.")
+
+    st.markdown("---")
+
+    # ── chart 3: survival / hazard risk ──────────────────────────────────────
+    st.subheader("Survival Risk — Failure Probability")
+    if not survival.empty and "battery_id" in survival.columns:
+        s_b = survival[survival["battery_id"].astype(str)==selected].sort_values("cycle_index")
+        if not s_b.empty and {"hazard_prob","failure_prob_horizon"}.issubset(s_b.columns):
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+
+            ax1.plot(s_b["cycle_index"], s_b["hazard_prob"], color="#E68A00", lw=2)
+            ax1.set_ylabel("Hazard probability"); ax1.set_title("Per-cycle hazard — P(fail at this cycle)")
+            ax1.grid(alpha=0.3); ax1.spines[["top","right"]].set_visible(False)
+            ax1.set_ylim(0, 1)
+
+            ax2.plot(s_b["cycle_index"], s_b["failure_prob_horizon"], color="#C0392B", lw=2)
+            ax2.axhline(0.70, color="#C0392B", lw=1.2, ls="--", alpha=0.7, label="HIGH threshold (70%)")
+            ax2.axhline(0.30, color="#E68A00", lw=1.2, ls="--", alpha=0.7, label="MEDIUM threshold (30%)")
+            ax2.fill_between(s_b["cycle_index"], 0.70, 1.0,
+                             where=s_b["failure_prob_horizon"]>=0.70,
+                             color="#C0392B", alpha=0.15)
+            ax2.set_ylabel("Failure prob (20-cycle horizon)")
+            ax2.set_xlabel("Cycle"); ax2.legend(fontsize=9)
+            ax2.grid(alpha=0.3); ax2.spines[["top","right"]].set_visible(False)
+            ax2.set_ylim(0, 1)
+
+            plt.tight_layout()
+            st.pyplot(fig); plt.close(fig)
+
+            # Risk category breakdown for this battery
+            if "risk_category" in s_b.columns:
+                rc = s_b["risk_category"].value_counts().to_dict()
+                c1,c2,c3 = st.columns(3)
+                c1.metric("LOW cycles",    rc.get("LOW",0))
+                c2.metric("MEDIUM cycles", rc.get("MEDIUM",0))
+                c3.metric("HIGH cycles",   rc.get("HIGH",0))
+        else:
+            st.info("No survival data for this battery.")
+
+    st.markdown("---")
+
+    # ── multi-battery overlay ─────────────────────────────────────────────────
+    st.subheader("Compare Multiple Batteries")
+    compare = st.multiselect("Select batteries to overlay",
+                             battery_ids, default=battery_ids[:6])
+    mode = st.radio("Chart mode", ["Capacity Fade", "RUL Trajectory"], horizontal=True)
+
+    if compare:
+        fig, ax = plt.subplots(figsize=(11, 5))
+        for bid in compare:
+            c = GROUP_COLOR[temp_group(bid)]
+            if mode == "Capacity Fade":
+                d = df[df["battery_id"].astype(str)==bid].sort_values("cycle_index")
+                if not d.empty:
+                    ax.plot(d["cycle_index"], d["capacity"], color=c, lw=1.5, label=bid)
             else:
-                missing_rul_ids.append(str(bid))
+                if RUL_COL and not u_df.empty and "battery_id" in u_df.columns:
+                    d = u_df[u_df["battery_id"].astype(str)==bid].sort_values("cycle_index")
+                    if not d.empty:
+                        ax.plot(d["cycle_index"], pd.to_numeric(d[RUL_COL],errors="coerce"),
+                                color=c, lw=1.5, label=bid)
 
-    n_plotted = len(plotted_rul_ids) + len(fallback_rul_ids)
-    if n_plotted > 0:
-        ax_rul.set_xlabel('Cycle')
-        ax_rul.set_ylabel('Predicted RUL (cycles)')
-        ax_rul.set_title('RUL Curve Overlay — All Selected Batteries')
-        ax_rul.grid(True, alpha=0.3)
-        ax_rul.set_ylim(bottom=0)
-
-        # Legend: only show when count is manageable
-        if len(compare_ids) <= 20:
-            ax_rul.legend(loc='upper right', fontsize=7, ncol=2)
+        if mode == "Capacity Fade":
+            ax.axhline(1.6, color="#C0392B", lw=1.5, ls="--", label="EOL (1.6 Ah)")
+            ax.set_ylabel("Capacity (Ah)")
         else:
-            ax_rul.legend(loc='upper right', fontsize=6, ncol=3, framealpha=0.7)
+            ax.axhline(0, color="#C0392B", lw=1, ls=":", alpha=0.5)
+            ax.set_ylabel("Predicted RUL (cycles)")
+            ax.set_ylim(bottom=0)
 
-        # Annotation for solid vs dashed
-        if fallback_rul_ids:
-            ax_rul.plot([], [], 'k-',  linewidth=1.5, label='predicted (uncertainty)')
-            ax_rul.plot([], [], 'k--', linewidth=1.5, alpha=0.7, label='raw label (train set)')
-    else:
-        ax_rul.text(0.1, 0.5,
-                    'No RUL data found for selected batteries.',
-                    transform=ax_rul.transAxes, fontsize=12)
+        patches = [mpatches.Patch(color=c, label=f"{g} — {GROUP_LABEL[g]}")
+                   for g,c in GROUP_COLOR.items()]
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles=handles+patches, fontsize=7, ncol=2)
+        ax.set_xlabel("Cycle"); ax.set_title(f"{mode} — Selected Batteries")
+        ax.grid(alpha=0.3); ax.spines[["top","right"]].set_visible(False)
+        st.pyplot(fig); plt.close(fig)
 
-    st.pyplot(fig_rul)
 
-    caption_parts = [f'Predicted (uncertainty): {len(plotted_rul_ids)}']
-    if fallback_rul_ids:
-        caption_parts.append(f'Raw label fallback (dashed): {len(fallback_rul_ids)}')
-    if missing_rul_ids:
-        caption_parts.append(f'Missing: {len(missing_rul_ids)} ({", ".join(missing_rul_ids[:6])}{"…" if len(missing_rul_ids) > 6 else ""})')
-    st.caption(' · '.join(caption_parts))
+# ══════════════════════════════════════════════════════════════════════════════
+# 5 · RISK DISTRIBUTION
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[4]:
+    st.title("⚠️ Risk Distribution")
+    st.markdown(
+        "For every cycle of every battery, the system calculates the probability of failure "
+        "within the next **20 cycles** and assigns a risk category. "
+        "Thresholds: **HIGH > 70%**, **MEDIUM 30–70%**, **LOW < 30%**."
+    )
 
-    # -- Comparison table --------------------------------------------------
-    rows = []
-    for bid in compare_ids:
-        d = df[df['battery_id'].astype(str) == str(bid)].sort_values('cycle_index')
-        if d.empty:
-            continue
-        last_d = d.iloc[-1]
-
-        latest_u = pd.DataFrame()
-        if has_uncertainty and 'battery_id' in u_df.columns:
-            latest_u = (
-                u_df[u_df['battery_id'].astype(str) == str(bid)]
-                .sort_values('cycle_index')
-                .tail(1)
+    risk_dist = unc_metrics.get("risk_distribution", {})
+    if risk_dist:
+        total = sum(risk_dist.values())
+        col1, col2 = st.columns(2)
+        with col1:
+            fig, ax = plt.subplots(figsize=(5,5))
+            labels = [f"{k}\n{v} rows" for k,v in risk_dist.items()]
+            colors = {"LOW":"#2E8648","MEDIUM":"#E68A00","HIGH":"#C0392B"}
+            clrs   = [colors[k] for k in risk_dist]
+            wedges, _, autotexts = ax.pie(
+                risk_dist.values(), labels=labels, colors=clrs,
+                autopct="%1.1f%%", startangle=140, explode=[0.02]*3,
+                textprops={"fontsize":10}
+            )
+            for at in autotexts:
+                at.set_fontsize(10); at.set_color("white"); at.set_fontweight("bold")
+            ax.set_title("Risk Category Distribution\n(all 2,790 observations)")
+            st.pyplot(fig); plt.close(fig)
+        with col2:
+            st.markdown("#### Interpretation")
+            for cat, color in [("HIGH","#C0392B"),("MEDIUM","#E68A00"),("LOW","#2E8648")]:
+                n   = risk_dist.get(cat, 0)
+                pct = 100*n/total if total else 0
+                st.markdown(
+                    f"<div style='background:{color}22;border-left:5px solid {color};"
+                    f"padding:12px 16px;border-radius:5px;margin-bottom:10px'>"
+                    f"<b style='color:{color};font-size:1.1em'>{cat}</b><br>"
+                    f"<span style='font-size:1.8em;font-weight:700'>{n}</span> "
+                    f"rows ({pct:.1f}%)</div>",
+                    unsafe_allow_html=True,
+                )
+            st.markdown(
+                f"**Mean predicted RUL:** {unc_metrics.get('mean_rul_prediction',0):.1f} cycles\n\n"
+                f"**Mean interval width:** {unc_metrics.get('mean_uncertainty_width',0):.1f} cycles"
             )
 
-        if not latest_u.empty and rul_col:
-            u_row      = latest_u.iloc[0]
-            rul_latest = float(u_row[rul_col])            if rul_col in latest_u.columns               else float('nan')
-            risk_score = float(u_row['failure_probability']) if 'failure_probability' in latest_u.columns else float('nan')
-            risk_cat   = str(u_row['risk_category'])         if 'risk_category'       in latest_u.columns else 'UNKNOWN'
-            interval_w = (
-                float(u_row['rul_upper_95']) - float(u_row['rul_lower_5'])
-                if has_rul_bands else float('nan')
+    st.markdown("---")
+
+    # Per-battery risk breakdown
+    st.subheader("Risk Breakdown per Test Battery")
+    if not u_df.empty and "battery_id" in u_df.columns and "risk_category" in u_df.columns:
+        test_bats = metrics.get("split_metadata",{}).get("test_batteries",[])
+        u_test = u_df[u_df["battery_id"].astype(str).isin([str(b) for b in test_bats])]
+        if not u_test.empty:
+            rows = []
+            for bid in test_bats:
+                sub = u_test[u_test["battery_id"].astype(str)==str(bid)]
+                if sub.empty: continue
+                rc = sub["risk_category"].value_counts().to_dict()
+                rows.append({"Battery": str(bid),
+                             "Temp Group": GROUP_LABEL[temp_group(str(bid))],
+                             "Total cycles": len(sub),
+                             "LOW":    rc.get("LOW",0),
+                             "MEDIUM": rc.get("MEDIUM",0),
+                             "HIGH":   rc.get("HIGH",0)})
+            if rows:
+                rdf = pd.DataFrame(rows)
+                fig, ax = plt.subplots(figsize=(9, 4))
+                x   = np.arange(len(rdf))
+                w   = 0.25
+                ax.bar(x-w,   rdf["LOW"],    w, color="#2E8648", label="LOW",    edgecolor="white")
+                ax.bar(x,     rdf["MEDIUM"], w, color="#E68A00", label="MEDIUM", edgecolor="white")
+                ax.bar(x+w,   rdf["HIGH"],   w, color="#C0392B", label="HIGH",   edgecolor="white")
+                ax.set_xticks(x); ax.set_xticklabels(rdf["Battery"])
+                ax.set_ylabel("Cycle count"); ax.set_title("Risk category counts per test battery")
+                ax.legend(); ax.grid(axis="y", alpha=0.3)
+                ax.spines[["top","right"]].set_visible(False)
+                st.pyplot(fig); plt.close(fig)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6 · DRIFT MONITORING
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[5]:
+    st.title("📡 Drift Monitoring — Population Stability Index (PSI)")
+    st.markdown(
+        "PSI measures how much the **test data distribution** differs from **training data**. "
+        "High PSI means the model is being asked to predict data that looks different from what it trained on."
+    )
+
+    overall_drift = drift.get("overall_status","—")
+    alerts        = drift.get("alerts",[])
+    psi_data      = drift.get("per_feature_psi", {})
+
+    d_color = "#C0392B" if overall_drift=="RED" else "#E68A00" if overall_drift=="AMBER" else "#2E8648"
+    st.markdown(
+        f"<div style='background:{d_color}22;border-left:6px solid {d_color};"
+        f"padding:14px 20px;border-radius:6px;margin-bottom:20px'>"
+        f"<span style='font-size:1.2em;font-weight:700;color:{d_color}'>"
+        f"Overall drift status: {overall_drift}</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    if psi_data:
+        psi_df = pd.DataFrame([
+            {"Feature": f, "PSI": round(v.get("psi",0),4), "Status": v.get("status","—")}
+            for f,v in psi_data.items()
+        ]).sort_values("PSI", ascending=True)
+
+        col1, col2 = st.columns([3,2])
+        with col1:
+            fig, ax = plt.subplots(figsize=(7, 5))
+            bar_colors = [
+                "#C0392B" if s=="RED" else "#E68A00" if s=="AMBER" else "#2E8648"
+                for s in psi_df["Status"]
+            ]
+            bars = ax.barh(psi_df["Feature"], psi_df["PSI"], color=bar_colors, edgecolor="white")
+            ax.axvline(0.10, color="#E68A00", lw=1.5, ls="--", label="Amber (0.10)")
+            ax.axvline(0.20, color="#C0392B", lw=1.5, ls="--", label="Red (0.20)")
+            for b, v in zip(bars, psi_df["PSI"]):
+                ax.text(v+0.02, b.get_y()+b.get_height()/2,
+                        f"{v:.3f}", va="center", fontsize=9)
+            ax.set_xlabel("PSI"); ax.set_title("Feature Drift: Train → Test")
+            ax.legend(fontsize=9); ax.spines[["top","right"]].set_visible(False)
+            ax.set_xlim(0, max(psi_df["PSI"])*1.2 + 0.3)
+            st.pyplot(fig); plt.close(fig)
+        with col2:
+            st.markdown("#### Why RED?")
+            st.markdown(
+                "Our **test set includes 3 cold batteries** (B0041, B0044, B0052) "
+                "tested at temperatures below 10°C.\n\n"
+                "Training was mostly room-temperature batteries. "
+                "Lower temperature changes voltage, current, and cycle duration — "
+                "so PSI is high on those features.\n\n"
+                "**This is expected, not a failure.** It confirms we need the temperature-stratified "
+                "conformal calibration and LOBO to handle cold batteries correctly.\n\n"
+                "**Degradation features** (capacity, ah_est, energy_j) also show high PSI because "
+                "test batteries are at different stages of life — also expected."
             )
-        else:
-            rul_label_col = 'RUL' if 'RUL' in d.columns else ('rul' if 'rul' in d.columns else None)
-            rul_latest = float(last_d[rul_label_col]) if rul_label_col else float('nan')
-            risk_score = float('nan')
-            risk_cat   = 'N/A (train)'
-            interval_w = float('nan')
-
-        rows.append({
-            'battery_id':     str(bid),
-            'n_cycles':       int(len(d)),
-            'latest_cycle':   int(last_d['cycle_index'])  if 'cycle_index' in d.columns  else None,
-            'latest_cap':     round(float(last_d['capacity']), 3)  if 'capacity'  in d.columns else float('nan'),
-            'latest_rul_pred':round(rul_latest, 1),
-            'fail_prob':      round(risk_score, 3),
-            'risk_category':  risk_cat,
-            'interval_width': round(interval_w, 1),
-            'temp_mean':      round(float(last_d['temp_mean']), 1) if 'temp_mean' in d.columns else float('nan'),
-            'v_mean':         round(float(last_d['v_mean']),    3) if 'v_mean'    in d.columns else float('nan'),
-            'i_mean':         round(float(last_d['i_mean']),    3) if 'i_mean'    in d.columns else float('nan'),
-        })
-
-    cmp_df = pd.DataFrame(rows)
-    if not cmp_df.empty:
-        st.dataframe(cmp_df, use_container_width=True, hide_index=True)
-    else:
-        st.info('No comparable rows found for selected batteries.')
-
-else:
-    st.info('Select at least one battery to enable comparison view.')
+            if alerts:
+                st.markdown("**Active alerts:**")
+                for a in alerts:
+                    st.markdown(f"- 🔴 {a}")
 
 
-# -- Single-battery views -----------------------------------------------------
-st.subheader('Degradation Trajectory + Anomalies')
-fig1, ax1 = plt.subplots(figsize=(10, 4))
-df_b_plot = df_b.copy()
-df_b_plot["cycle_index"] = pd.to_numeric(df_b_plot["cycle_index"], errors="coerce")
-df_b_plot["capacity"] = pd.to_numeric(df_b_plot["capacity"], errors="coerce")
-df_b_plot = df_b_plot.dropna(subset=["cycle_index", "capacity"])
-ax1.plot(df_b_plot['cycle_index'], df_b_plot['capacity'], label='Capacity')
-single_anomaly_count = 0
-if {'battery_id', 'cycle_index'}.issubset(a_df.columns):
-    an_b = a_df[a_df['battery_id'].astype(str) == selected_battery].copy()
-    if not an_b.empty:
-        an_b["cycle_index"] = pd.to_numeric(an_b["cycle_index"], errors="coerce")
-        merged = df_b_plot.merge(an_b[['cycle_index']].drop_duplicates(), on='cycle_index', how='inner')
-        ax1.scatter(merged['cycle_index'], merged['capacity'],
-                    color='red', label='Anomalies', s=20, zorder=3)
-        single_anomaly_count = int(len(merged))
-ax1.set_xlabel('Cycle')
-ax1.set_ylabel('Capacity')
-ax1.set_title(f'Degradation — Battery {selected_battery}')
-ax1.grid(True)
-ax1.legend()
-st.pyplot(fig1)
-st.caption(f'Anomaly points for {selected_battery}: {single_anomaly_count}')
+# ══════════════════════════════════════════════════════════════════════════════
+# 7 · REASONING & HYPOTHESES
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[6]:
+    st.title("💡 Reasoning & Hypotheses")
+    st.markdown(
+        "Stage 5 generates human-readable explanations grounded in model behaviour. "
+        "All outputs are **hypotheses**, not proven causal claims."
+    )
 
-st.subheader('Uncertainty')
-fig2, ax2 = plt.subplots(figsize=(10, 4))
-if has_uncertainty and 'battery_id' in u_df.columns:
-    u_b = u_df[u_df['battery_id'].astype(str) == selected_battery].sort_values('cycle_index')
-    if not u_b.empty and rul_col:
-        ax2.plot(u_b['cycle_index'], pd.to_numeric(u_b[rul_col], errors='coerce'),
-                 label=f'RUL ({rul_col})')
-        if has_rul_bands:
-            ax2.fill_between(
-                u_b['cycle_index'],
-                pd.to_numeric(u_b['rul_lower_5'],  errors='coerce'),
-                pd.to_numeric(u_b['rul_upper_95'], errors='coerce'),
-                alpha=0.3, label='90% Conformal Interval',
+    tab1, tab2 = st.tabs(["Degradation Hypotheses", "Counterfactual Examples"])
+
+    with tab1:
+        st.subheader(f"{len(hypotheses)} Degradation Hypotheses")
+        st.caption("Each hypothesis is derived from XGBoost feature importance. "
+                   "Higher confidence = stronger model signal.")
+        if hypotheses:
+            for h in sorted(hypotheses, key=lambda x: x.get("confidence",0), reverse=True):
+                conf = h.get("confidence",0)
+                bar  = int(conf * 20)
+                c    = "#2E8648" if conf > 0.2 else "#E68A00" if conf > 0.1 else "#AAAAAA"
+                st.markdown(
+                    f"<div style='border-left:4px solid {c};padding:10px 16px;"
+                    f"background:{c}11;border-radius:4px;margin-bottom:10px'>"
+                    f"<b style='color:{c}'>{h.get('hypothesis_id','')}</b> — "
+                    f"<span style='font-size:1.05em'>{h.get('hypothesis_text','')}</span><br>"
+                    f"<small style='color:#666'>Evidence: {h.get('supporting_evidence','')} | "
+                    f"Confidence: {conf:.3f} {'█'*bar}{'░'*(20-bar)}</small>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+    with tab2:
+        st.subheader(f"{len(counterfact)} Counterfactual Examples")
+        st.markdown(
+            "A counterfactual answers: *'if this feature had been different, "
+            "how would the predicted RUL have changed?'*"
+        )
+        if counterfact:
+            cdf = pd.DataFrame([{
+                "Observation":  c.get("observation_id",""),
+                "True RUL":     c.get("actual_rul",""),
+                "Predicted RUL":round(float(c.get("predicted_rul",0)),1),
+                "Feature changed": c.get("counterfactual",{}).get("feature_changed",""),
+                "Original value":  round(float(c.get("counterfactual",{}).get("original_value",0)),3),
+                "New value":       round(float(c.get("counterfactual",{}).get("counterfactual_value",0)),3),
+                "RUL change":      round(float(c.get("counterfactual",{}).get("predicted_rul_change",0)),2),
+            } for c in counterfact])
+
+            def color_change(val):
+                try:
+                    v = float(val)
+                    return "color: #2E8648; font-weight:bold" if v>0 else \
+                           "color: #C0392B; font-weight:bold" if v<0 else ""
+                except: return ""
+            st.dataframe(
+                cdf.style.applymap(color_change, subset=["RUL change"]),
+                use_container_width=True, hide_index=True,
             )
-    else:
-        ax2.text(0.1, 0.5, 'No uncertainty rows for selected battery',
-                 transform=ax2.transAxes)
-else:
-    ax2.text(0.1, 0.5, 'uncertainty_estimates.json not loaded',
-             transform=ax2.transAxes)
-ax2.set_xlabel('Cycle')
-ax2.set_ylabel('RUL')
-ax2.set_title(f'RUL Uncertainty — Battery {selected_battery}')
-ax2.grid(True)
-ax2.legend(loc='best')
-st.pyplot(fig2)
+            st.caption("Green RUL change = if that feature were higher/lower, battery would last longer.")
 
-st.subheader('Survival / Hazard Risk')
-fig3, (ax3, ax4) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-if {'battery_id', 'cycle_index', 'hazard_prob', 'failure_prob_horizon'}.issubset(survival.columns):
-    s_b = survival[survival['battery_id'].astype(str) == selected_battery].sort_values('cycle_index')
-    if not s_b.empty:
-        ax3.plot(s_b['cycle_index'], s_b['hazard_prob'],
-                 color='tab:orange', label='Hazard Probability')
-        ax4.plot(s_b['cycle_index'], s_b['failure_prob_horizon'],
-                 color='tab:red', label='Failure Probability (Horizon)')
-    else:
-        ax3.text(0.1, 0.5, 'No survival rows for selected battery', transform=ax3.transAxes)
-else:
-    ax3.text(0.1, 0.5, 'Survival schema missing required columns', transform=ax3.transAxes)
-ax3.set_ylabel('Hazard')
-ax3.set_title(f'Survival Risk — Battery {selected_battery}')
-ax3.grid(True)
-ax3.legend(loc='best')
-ax4.set_xlabel('Cycle')
-ax4.set_ylabel('Failure Prob')
-ax4.grid(True)
-ax4.legend(loc='best')
-st.pyplot(fig3)
 
-st.subheader('Final System Report')
-if REPORT_PATH.exists():
-    st.markdown(REPORT_PATH.read_text(encoding='utf-8'))
-else:
-    st.warning('final_system_report.md not found in modeling output directory.')
+# ══════════════════════════════════════════════════════════════════════════════
+# 8 · FINAL REPORT
+# ══════════════════════════════════════════════════════════════════════════════
+elif section == SECTIONS[7]:
+    st.title("📋 Final System Report")
+    st.markdown(
+        "This report is generated automatically by the Stage 6 Supervisor. "
+        "It audits every pipeline output and issues the final verdict."
+    )
+    if report_path.exists():
+        st.markdown(report_path.read_text(encoding="utf-8"))
+    else:
+        st.warning("final_system_report.md not found.")
+
+    st.markdown("---")
+    st.subheader("Artifact Checklist")
+    artifacts = [
+        ("cycle_features_with_rul.csv",       BASE/"data/processed/cycle_features_with_rul.csv"),
+        ("uncertainty_estimates.json",         MDL/"uncertainty_estimates.json"),
+        ("conformal_coverage_report.json",     MDL/"conformal_coverage_report.json"),
+        ("survival_risk_predictions.csv",      MDL/"survival_risk_predictions.csv"),
+        ("anomalies.json",                     MDL/"anomalies.json"),
+        ("degradation_hypotheses.json",        MDL/"degradation_hypotheses.json"),
+        ("counterfactual_examples.json",       MDL/"counterfactual_examples.json"),
+        ("feature_importance.json",            MDL/"feature_importance.json"),
+        ("groupkfold_cv_report.json",          MDL/"groupkfold_cv_report.json"),
+        ("drift_report.json",                  MDL/"drift_report.json"),
+        ("final_system_report.md",             MDL/"final_system_report.md"),
+        ("conformal_calibrator.json",          TM/"conformal_calibrator.json"),
+        ("model_metrics.json",                 TM/"model_metrics.json"),
+        ("conformal_ablation.json",            TM/"conformal_ablation.json"),
+    ]
+    rows = [{"Artifact": name, "Exists": "✅  Yes" if Path(path).exists() else "❌  Missing"}
+            for name, path in artifacts]
+    adf = pd.DataFrame(rows)
+    def color_exists(val):
+        return "color: #2E8648; font-weight:bold" if "Yes" in str(val) \
+               else "color: #C0392B; font-weight:bold"
+    st.dataframe(adf.style.applymap(color_exists, subset=["Exists"]),
+                 use_container_width=True, hide_index=True)
