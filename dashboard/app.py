@@ -426,17 +426,29 @@ elif section == SECTIONS[3]:
     df_b = df[df["battery_id"].astype(str)==selected].sort_values("cycle_index")
 
     # Quick stats
-    c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Total cycles",    len(df_b))
-    c2.metric("Initial capacity",f"{df_b['capacity'].iloc[0]:.3f} Ah" if len(df_b) else "—")
-    c3.metric("Final capacity",  f"{df_b['capacity'].iloc[-1]:.3f} Ah" if len(df_b) else "—")
-    n_anom = len(a_df[a_df["battery_id"].astype(str)==selected]) if not a_df.empty else 0
-    c4.metric("Anomalies flagged", n_anom)
+    eol_thr_val  = df_b["eol_capacity_threshold"].iloc[0] if "eol_capacity_threshold" in df_b.columns and len(df_b) else None
+    eol_cyc_val  = int(df_b["eol_cycle"].iloc[0]) if "eol_cycle" in df_b.columns and len(df_b) else None
+    n_anom       = len(a_df[a_df["battery_id"].astype(str)==selected]) if not a_df.empty else 0
+
+    c1,c2,c3,c4,c5,c6 = st.columns(6)
+    c1.metric("Total cycles recorded", len(df_b))
+    c2.metric("Starting capacity",  f"{df_b['capacity'].iloc[0]:.3f} Ah" if len(df_b) else "—")
+    c3.metric("Final capacity",     f"{df_b['capacity'].iloc[-1]:.3f} Ah" if len(df_b) else "—")
+    c4.metric("EOL threshold",      f"{eol_thr_val:.3f} Ah" if eol_thr_val else "—",
+              help="70% of starting capacity — when crossed the battery is worn out")
+    c5.metric("EOL reached at cycle", str(eol_cyc_val) if eol_cyc_val else "—",
+              help="First cycle where capacity dropped below the EOL threshold")
+    c6.metric("Anomalies flagged",  n_anom)
 
     st.markdown("---")
 
     # ── chart 1: capacity degradation + anomalies ─────────────────────────────
-    st.subheader("Capacity Degradation + Anomaly Flags")
+    st.subheader("Chart 1 — Capacity Degradation + Anomaly Flags")
+    st.markdown(
+        "> **What to look for:** The line should slope downward over time as the battery wears out. "
+        "When it crosses the red dashed line the battery has reached End-of-Life (EOL = 70% of starting capacity). "
+        "Red dots are cycles where the battery behaved unexpectedly — large sudden drop or spike in the degradation trend."
+    )
     fig, ax = plt.subplots(figsize=(10, 4))
     color = GROUP_COLOR[grp]
     ax.plot(df_b["cycle_index"], df_b["capacity"], color=color, lw=2, label="Capacity (Ah)")
@@ -460,7 +472,12 @@ elif section == SECTIONS[3]:
     st.markdown("---")
 
     # ── chart 2: RUL prediction + conformal interval ──────────────────────────
-    st.subheader("RUL Prediction with 90% Conformal Interval")
+    st.subheader("Chart 2 — RUL Prediction with 90% Conformal Interval")
+    st.markdown(
+        "> **What to look for:** Both lines should slope downward (fewer cycles remaining as time passes). "
+        "The shaded band is the confidence interval — we are 90% sure the true RUL is somewhere inside it. "
+        "A wide band means more uncertainty. The lines should be close together — large gaps mean the model struggled with this battery."
+    )
     if RUL_COL and not u_df.empty and "battery_id" in u_df.columns:
         u_b = u_df[u_df["battery_id"].astype(str)==selected].sort_values("cycle_index")
         if not u_b.empty:
@@ -491,37 +508,148 @@ elif section == SECTIONS[3]:
 
     # ── chart 3: survival / hazard risk ──────────────────────────────────────
     st.subheader("Survival Risk — Failure Probability")
+
+    # plain english explainer always shown first
+    st.markdown(
+        "> **What is this chart?** For every cycle, we ask: "
+        "*'if we are at this cycle right now, what is the chance this battery fails within the next 20 cycles?'* "
+        "That probability drives the LOW / MEDIUM / HIGH risk label. "
+        "The 20-cycle window is our **maintenance horizon** — if failure is likely within 20 cycles, act now."
+    )
+
     if not survival.empty and "battery_id" in survival.columns:
         s_b = survival[survival["battery_id"].astype(str)==selected].sort_values("cycle_index")
+
         if not s_b.empty and {"hazard_prob","failure_prob_horizon"}.issubset(s_b.columns):
+
+            # ── pull EOL info from feature data ──────────────────────────────
+            eol_cycle = int(df_b["eol_cycle"].iloc[0]) if "eol_cycle" in df_b.columns else None
+            eol_thr   = float(df_b["eol_capacity_threshold"].iloc[0]) if "eol_capacity_threshold" in df_b.columns else None
+            horizon   = 20
+            high_start = int(s_b[s_b["failure_prob_horizon"] >= 0.70]["cycle_index"].min()) \
+                         if (s_b["failure_prob_horizon"] >= 0.70).any() else None
+
+            # ── explain what is about to be shown for THIS battery ────────────
+            rc = s_b["risk_category"].value_counts().to_dict() if "risk_category" in s_b.columns else {}
+
+            if eol_cycle is not None:
+                col_exp1, col_exp2 = st.columns(2)
+                with col_exp1:
+                    st.markdown(
+                        f"**Battery {selected} — key facts:**\n\n"
+                        f"- EOL threshold: **{eol_thr:.3f} Ah** (70% of starting capacity)\n"
+                        f"- Capacity first crossed EOL at: **cycle {eol_cycle}**\n"
+                        f"- Total recorded cycles: **{len(s_b)}**\n"
+                        f"- Maintenance horizon used: **{horizon} cycles**"
+                    )
+                with col_exp2:
+                    if high_start is not None:
+                        cycles_before_high = high_start - 1
+                        st.markdown(
+                            f"**Why the graph looks the way it does:**\n\n"
+                            f"- Cycles **1 – {cycles_before_high}**: EOL is more than {horizon} cycles away → failure prob = 0% → **LOW**\n"
+                            f"- From cycle **{high_start}** onward: EOL is within {horizon} cycles → failure prob = 100% → **HIGH**\n\n"
+                            f"The line jumps from 0 to 1 at cycle {high_start} because "
+                            f"that is exactly when EOL enters the {horizon}-cycle window."
+                        )
+                    else:
+                        st.markdown(
+                            f"**Why the graph shows all zeros:**\n\n"
+                            f"This battery's EOL (cycle {eol_cycle}) is always more than "
+                            f"{horizon} cycles away from any recorded cycle, so the failure "
+                            f"probability never rises above the thresholds."
+                        )
+
+            # ── risk category cards ───────────────────────────────────────────
+            c1, c2, c3 = st.columns(3)
+            for col_, cat, color_, meaning in [
+                (c1, "LOW",    "#2E8648", f"EOL is more than {horizon} cycles away — no immediate concern"),
+                (c2, "MEDIUM", "#E68A00", f"EOL is within {horizon}–{horizon*2} cycles — monitor closely"),
+                (c3, "HIGH",   "#C0392B", f"EOL is within {horizon} cycles — act now"),
+            ]:
+                n = rc.get(cat, 0)
+                col_.markdown(
+                    f"<div style='background:{color_}22;border-left:5px solid {color_};"
+                    f"padding:10px 14px;border-radius:5px;text-align:center'>"
+                    f"<div style='color:{color_};font-weight:700;font-size:1em'>{cat}</div>"
+                    f"<div style='font-size:2em;font-weight:700'>{n} cycles</div>"
+                    f"<div style='color:#666;font-size:0.8em;margin-top:4px'>{meaning}</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+            st.markdown("")
+
+            # ── the actual charts ─────────────────────────────────────────────
             fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
 
-            ax1.plot(s_b["cycle_index"], s_b["hazard_prob"], color="#E68A00", lw=2)
-            ax1.set_ylabel("Hazard probability"); ax1.set_title("Per-cycle hazard — P(fail at this cycle)")
-            ax1.grid(alpha=0.3); ax1.spines[["top","right"]].set_visible(False)
-            ax1.set_ylim(0, 1)
+            # top: hazard prob
+            ax1.plot(s_b["cycle_index"], s_b["hazard_prob"], color="#E68A00", lw=2,
+                     label="Hazard — P(fail at exactly this cycle)")
+            if eol_cycle is not None and eol_cycle <= s_b["cycle_index"].max():
+                ax1.axvline(eol_cycle, color="#C0392B", lw=2, ls="--", alpha=0.8,
+                            label=f"EOL reached (cycle {eol_cycle})")
+            ax1.set_ylabel("Hazard probability")
+            ax1.set_title(
+                f"Battery {selected} — Survival Risk\n"
+                f"Top: per-cycle hazard   |   Bottom: probability of failing within next {horizon} cycles"
+            )
+            ax1.legend(fontsize=9); ax1.grid(alpha=0.3)
+            ax1.spines[["top","right"]].set_visible(False)
+            ax1.set_ylim(-0.05, 1.1)
 
-            ax2.plot(s_b["cycle_index"], s_b["failure_prob_horizon"], color="#C0392B", lw=2)
-            ax2.axhline(0.70, color="#C0392B", lw=1.2, ls="--", alpha=0.7, label="HIGH threshold (70%)")
-            ax2.axhline(0.30, color="#E68A00", lw=1.2, ls="--", alpha=0.7, label="MEDIUM threshold (30%)")
-            ax2.fill_between(s_b["cycle_index"], 0.70, 1.0,
-                             where=s_b["failure_prob_horizon"]>=0.70,
-                             color="#C0392B", alpha=0.15)
-            ax2.set_ylabel("Failure prob (20-cycle horizon)")
-            ax2.set_xlabel("Cycle"); ax2.legend(fontsize=9)
+            # bottom: horizon failure prob with coloured zones
+            fp = s_b["failure_prob_horizon"]
+            cyc = s_b["cycle_index"]
+            ax2.fill_between(cyc, 0, fp,
+                             where=fp < 0.30,
+                             color="#2E8648", alpha=0.25, label="LOW zone (<30%)")
+            ax2.fill_between(cyc, 0, fp,
+                             where=(fp >= 0.30) & (fp < 0.70),
+                             color="#E68A00", alpha=0.25, label="MEDIUM zone (30–70%)")
+            ax2.fill_between(cyc, 0, fp,
+                             where=fp >= 0.70,
+                             color="#C0392B", alpha=0.25, label="HIGH zone (>70%)")
+            ax2.plot(cyc, fp, color="#C0392B", lw=2)
+            ax2.axhline(0.70, color="#C0392B", lw=1.2, ls="--", alpha=0.7)
+            ax2.axhline(0.30, color="#E68A00", lw=1.2, ls="--", alpha=0.7)
+            ax2.text(cyc.max()*0.98, 0.72, "HIGH threshold (70%)",
+                     ha="right", fontsize=8, color="#C0392B")
+            ax2.text(cyc.max()*0.98, 0.32, "MEDIUM threshold (30%)",
+                     ha="right", fontsize=8, color="#E68A00")
+            if eol_cycle is not None and eol_cycle <= cyc.max():
+                ax2.axvline(eol_cycle, color="#C0392B", lw=2, ls="--", alpha=0.8)
+                ax2.text(eol_cycle+1, 0.5, f"EOL\n(cycle {eol_cycle})",
+                         fontsize=8, color="#C0392B", va="center")
+            if high_start is not None:
+                ax2.axvline(high_start, color="#888888", lw=1.2, ls=":", alpha=0.7)
+                ax2.text(high_start+1, 0.1, f"HIGH risk\nstarts (cycle {high_start})",
+                         fontsize=7.5, color="#888888", va="bottom")
+            ax2.set_ylabel(f"P(fail within next {horizon} cycles)")
+            ax2.set_xlabel("Cycle index")
+            ax2.legend(fontsize=8, loc="center left")
             ax2.grid(alpha=0.3); ax2.spines[["top","right"]].set_visible(False)
-            ax2.set_ylim(0, 1)
+            ax2.set_ylim(-0.05, 1.1)
 
             plt.tight_layout()
             st.pyplot(fig); plt.close(fig)
 
-            # Risk category breakdown for this battery
-            if "risk_category" in s_b.columns:
-                rc = s_b["risk_category"].value_counts().to_dict()
-                c1,c2,c3 = st.columns(3)
-                c1.metric("LOW cycles",    rc.get("LOW",0))
-                c2.metric("MEDIUM cycles", rc.get("MEDIUM",0))
-                c3.metric("HIGH cycles",   rc.get("HIGH",0))
+            # ── bottom plain-english summary ──────────────────────────────────
+            st.markdown(
+                f"**Reading this chart for battery {selected}:**\n\n"
+                + (
+                    f"The bottom chart is flat at **0%** for cycles 1–{high_start-1}, "
+                    f"then jumps to **100%** from cycle {high_start} onward. "
+                    f"This is because this battery reached EOL at cycle **{eol_cycle}** — "
+                    f"a short life. From cycle {high_start}, EOL was always within {horizon} cycles, "
+                    f"so failure probability is always 100%. The jump looks dramatic but is correct — "
+                    f"it simply means 'we are now inside the danger window.'"
+                    if high_start is not None and eol_cycle is not None
+                    else
+                    f"This battery's EOL was always outside the {horizon}-cycle horizon for all "
+                    f"recorded cycles, so failure probability stays at 0% throughout."
+                )
+            )
+
         else:
             st.info("No survival data for this battery.")
 
