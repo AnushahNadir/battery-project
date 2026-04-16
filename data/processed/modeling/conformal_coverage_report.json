@@ -1,0 +1,28 @@
+{
+  "target_coverage": 0.9,
+  "overall_empirical_coverage": 0.9112,
+  "n_test_rows": 2422,
+  "per_group": {
+    "room": {
+      "n_rows": 2178,
+      "empirical_coverage": 0.9068,
+      "q_hat": 45.1,
+      "strategy": "split",
+      "gap_vs_target": 0.0068
+    },
+    "hot": {
+      "n_rows": 40,
+      "empirical_coverage": 0.925,
+      "q_hat": 5.44,
+      "strategy": "split",
+      "gap_vs_target": 0.025
+    },
+    "cold": {
+      "n_rows": 204,
+      "empirical_coverage": 0.9559,
+      "q_hat": 69.19,
+      "strategy": "lobo",
+      "gap_vs_target": 0.0559
+    }
+  }
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "hypothesis_id": "H_CYCLE_INDEX",
+    "feature": "cycle_index",
+    "hypothesis_text": "Feature 'cycle_index' correlates with RUL predictions.",
+    "supporting_evidence": "Model importance = 24.2%",
+    "confidence": 0.484,
+    "is_causal_claim": false,
+    "_disclaimer": "Hypothesis derived from model behavior, not a causal claim."
+  },
+  {
+    "hypothesis_id": "H_V_MEAN",
+    "feature": "v_mean",
+    "hypothesis_text": "Feature 'v_mean' correlates with RUL predictions.",
+    "supporting_evidence": "Model importance = 20.8%",
+    "confidence": 0.416,
+    "is_causal_claim": false,
+    "_disclaimer": "Hypothesis derived from model behavior, not a causal claim."
+  },
+  {
+    "hypothesis_id": "H_AH_EST",
+    "feature": "ah_est",
+    "hypothesis_text": "Feature 'ah_est' correlates with RUL predictions.",
+    "supporting_evidence": "Model importance = 19.1%",
+    "confidence": 0.382,
+    "is_causal_claim": false,
+    "_disclaimer": "Hypothesis derived from model behavior, not a causal claim."
+  },
+  {
+    "hypothesis_id": "H_ENERGY_J",
+    "feature": "energy_j",
+    "hypothesis_text": "Cumulative energy throughput reflects long-term wear.",
+    "supporting_evidence": "Model importance = 13.3%",
+    "confidence": 0.266,
+    "is_causal_claim": false,
+    "_disclaimer": "Hypothesis derived from model behavior, not a causal claim."
+  },
+  {
+    "hypothesis_id": "H_I_MIN",
+    "feature": "i_min",
+    "hypothesis_text": "Feature 'i_min' correlates with RUL predictions.",
+    "supporting_evidence": "Model importance = 9.7%",
+    "confidence": 0.194,
+    "is_causal_claim": false,
+    "_disclaimer": "Hypothesis derived from model behavior, not a causal claim."
+  }
+]

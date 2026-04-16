@@ -1,0 +1,158 @@
+[
+  {
+    "observation_id": "B0030_cycle_1",
+    "actual_rul": 39.0,
+    "predicted_rul": 36.17,
+    "counterfactual": {
+      "feature_changed": "capacity",
+      "original_value": 1.672,
+      "counterfactual_value": 1.505,
+      "predicted_rul_change": -15.07,
+      "confidence": 0.024
+    },
+    "interpretation": "If capacity changed from 1.672 to 1.505, predicted RUL would change by -15.07 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "B0036_cycle_12",
+    "actual_rul": 35.0,
+    "predicted_rul": 106.91,
+    "counterfactual": {
+      "feature_changed": "capacity",
+      "original_value": 1.693,
+      "counterfactual_value": 2.032,
+      "predicted_rul_change": -29.84,
+      "confidence": 0.024
+    },
+    "interpretation": "If capacity changed from 1.693 to 2.032, predicted RUL would change by -29.84 cycles (direction_check=CHECK)."
+  },
+  {
+    "observation_id": "B0036_cycle_64",
+    "actual_rul": 0.0,
+    "predicted_rul": 53.04,
+    "counterfactual": {
+      "feature_changed": "capacity",
+      "original_value": 1.766,
+      "counterfactual_value": 2.119,
+      "predicted_rul_change": -9.64,
+      "confidence": 0.024
+    },
+    "interpretation": "If capacity changed from 1.766 to 2.119, predicted RUL would change by -9.64 cycles (direction_check=CHECK)."
+  },
+  {
+    "observation_id": "B0036_cycle_115",
+    "actual_rul": 0.0,
+    "predicted_rul": 0.08,
+    "counterfactual": {
+      "feature_changed": "temp_mean",
+      "original_value": 31.693,
+      "counterfactual_value": 34.862,
+      "predicted_rul_change": -2.98,
+      "confidence": 0.014
+    },
+    "interpretation": "If temp_mean changed from 31.693 to 34.862, predicted RUL would change by -2.98 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "B0036_cycle_167",
+    "actual_rul": 0.0,
+    "predicted_rul": -18.16,
+    "counterfactual": {
+      "feature_changed": "temp_mean",
+      "original_value": 30.62,
+      "counterfactual_value": 36.745,
+      "predicted_rul_change": -10.3,
+      "confidence": 0.014
+    },
+    "interpretation": "If temp_mean changed from 30.620 to 36.745, predicted RUL would change by -10.30 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "B0041_cycle_21",
+    "actual_rul": 46.0,
+    "predicted_rul": 80.92,
+    "counterfactual": {
+      "feature_changed": "temp_mean",
+      "original_value": 7.796,
+      "counterfactual_value": 8.576,
+      "predicted_rul_change": -9.42,
+      "confidence": 0.014
+    },
+    "interpretation": "If temp_mean changed from 7.796 to 8.576, predicted RUL would change by -9.42 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "B0044_cycle_6",
+    "actual_rul": 106.0,
+    "predicted_rul": 111.23,
+    "counterfactual": {
+      "feature_changed": "i_min",
+      "original_value": 0.0,
+      "counterfactual_value": 0.05,
+      "predicted_rul_change": -0.64,
+      "confidence": 0.097
+    },
+    "interpretation": "If i_min changed from 0.000 to 0.050, predicted RUL would change by -0.64 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "B0044_cycle_57",
+    "actual_rul": 55.0,
+    "predicted_rul": 56.21,
+    "counterfactual": {
+      "feature_changed": "i_min",
+      "original_value": 0.0,
+      "counterfactual_value": 0.05,
+      "predicted_rul_change": 1.33,
+      "confidence": 0.097
+    },
+    "interpretation": "If i_min changed from 0.000 to 0.050, predicted RUL would change by +1.33 cycles (direction_check=CHECK)."
+  },
+  {
+    "observation_id": "B0044_cycle_109",
+    "actual_rul": 3.0,
+    "predicted_rul": 21.87,
+    "counterfactual": {
+      "feature_changed": "i_min",
+      "original_value": 0.0,
+      "counterfactual_value": 0.05,
+      "predicted_rul_change": 1.93,
+      "confidence": 0.097
+    },
+    "interpretation": "If i_min changed from 0.000 to 0.050, predicted RUL would change by +1.93 cycles (direction_check=CHECK)."
+  },
+  {
+    "observation_id": "CS2_35_cycle_23",
+    "actual_rul": 428.0,
+    "predicted_rul": 343.92,
+    "counterfactual": {
+      "feature_changed": "cycle_index",
+      "original_value": 23.0,
+      "counterfactual_value": 27.6,
+      "predicted_rul_change": -0.08,
+      "confidence": 0.242
+    },
+    "interpretation": "If cycle_index changed from 23.000 to 27.600, predicted RUL would change by -0.08 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "CS2_35_cycle_75",
+    "actual_rul": 376.0,
+    "predicted_rul": 373.4,
+    "counterfactual": {
+      "feature_changed": "cycle_index",
+      "original_value": 75.0,
+      "counterfactual_value": 90.0,
+      "predicted_rul_change": -10.78,
+      "confidence": 0.242
+    },
+    "interpretation": "If cycle_index changed from 75.000 to 90.000, predicted RUL would change by -10.78 cycles (direction_check=PASS)."
+  },
+  {
+    "observation_id": "CS2_35_cycle_126",
+    "actual_rul": 325.0,
+    "predicted_rul": 337.96,
+    "counterfactual": {
+      "feature_changed": "cycle_index",
+      "original_value": 126.0,
+      "counterfactual_value": 151.2,
+      "predicted_rul_change": -26.04,
+      "confidence": 0.242
+    },
+    "interpretation": "If cycle_index changed from 126.000 to 151.200, predicted RUL would change by -26.04 cycles (direction_check=PASS)."
+  }
+]

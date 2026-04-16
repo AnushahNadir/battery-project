@@ -1,0 +1,402 @@
+{
+  "metadata_report": {
+    "dataset_path": "d:\\Energy Project\\code\\battery-project3\\data\\raw\\hostile\\hostile_metadata.csv",
+    "dataset_type": "metadata",
+    "total_columns": 9,
+    "inspected_columns": [
+      {
+        "column_name": "cell_identifier",
+        "candidate_canonical": "battery_id",
+        "confidence": 0.465,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.3,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.465
+        },
+        "is_ambiguous": false,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.47 < 0.6)",
+        "value_stats": {
+          "type": "non_numeric",
+          "missing_ratio": 0.0
+        }
+      },
+      {
+        "column_name": "operation_mode",
+        "candidate_canonical": "type",
+        "confidence": 0.465,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.3,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.465
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.47 < 0.6)",
+        "value_stats": {
+          "type": "non_numeric",
+          "missing_ratio": 0.0
+        }
+      },
+      {
+        "column_name": "timestamp_start",
+        "candidate_canonical": "start_time",
+        "confidence": 0.465,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.3,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.465
+        },
+        "is_ambiguous": false,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.47 < 0.6)",
+        "value_stats": {
+          "type": "non_numeric",
+          "missing_ratio": 0.0
+        }
+      },
+      {
+        "column_name": "env_temp_celsius",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.49 < 0.6)",
+        "value_stats": {
+          "type": "numeric",
+          "count": 10,
+          "missing_ratio": 0.0,
+          "min": 24.2,
+          "max": 26.3,
+          "mean": 25.3,
+          "std": 0.6394
+        }
+      },
+      {
+        "column_name": "discharge_capacity_ah",
+        "candidate_canonical": "capacity",
+        "confidence": 0.815,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 1.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.815
+        },
+        "is_ambiguous": false,
+        "is_rejected": false,
+        "rejection_reason": null,
+        "value_stats": {
+          "type": "numeric",
+          "count": 6,
+          "missing_ratio": 0.4,
+          "min": 1.776,
+          "max": 1.912,
+          "mean": 1.8437,
+          "std": 0.053
+        }
+      },
+      {
+        "column_name": "mystery_column",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "README indicates column is internal/proprietary/unknown units",
+        "value_stats": {
+          "type": "numeric",
+          "count": 8,
+          "missing_ratio": 0.2,
+          "min": 38.2,
+          "max": 47.2,
+          "mean": 42.3,
+          "std": 2.952
+        }
+      },
+      {
+        "column_name": "ohmic_resistance",
+        "candidate_canonical": "Re",
+        "confidence": 0.815,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 1.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.815
+        },
+        "is_ambiguous": false,
+        "is_rejected": false,
+        "rejection_reason": null,
+        "value_stats": {
+          "type": "numeric",
+          "count": 10,
+          "missing_ratio": 0.0,
+          "min": 0.052,
+          "max": 0.063,
+          "mean": 0.0573,
+          "std": 0.0033
+        }
+      },
+      {
+        "column_name": "voltage_ratio",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "README indicates column is internal/proprietary/unknown units",
+        "value_stats": {
+          "type": "numeric",
+          "count": 6,
+          "missing_ratio": 0.4,
+          "min": 0.847,
+          "max": 0.861,
+          "mean": 0.8525,
+          "std": 0.005
+        }
+      },
+      {
+        "column_name": "data_file",
+        "candidate_canonical": "filename",
+        "confidence": 0.465,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.3,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.465
+        },
+        "is_ambiguous": false,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.47 < 0.6)",
+        "value_stats": {
+          "type": "non_numeric",
+          "missing_ratio": 0.0
+        }
+      }
+    ],
+    "required_fields_status": {
+      "battery_id": "LOW_CONFIDENCE",
+      "type": "LOW_CONFIDENCE",
+      "filename": "LOW_CONFIDENCE",
+      "capacity": "FOUND"
+    },
+    "overall_confidence": 0.815,
+    "halt_recommended": true,
+    "halt_reason": "Required fields with low confidence: ['battery_id', 'type', 'filename']",
+    "ambiguous_fields": [
+      "operation_mode",
+      "env_temp_celsius",
+      "mystery_column",
+      "voltage_ratio"
+    ],
+    "rejected_fields": [
+      "cell_identifier",
+      "operation_mode",
+      "timestamp_start",
+      "env_temp_celsius",
+      "mystery_column",
+      "voltage_ratio",
+      "data_file"
+    ]
+  },
+  "timeseries_report": {
+    "dataset_path": "d:\\Energy Project\\code\\battery-project3\\data\\raw\\hostile\\timeseries\\TS001.csv",
+    "dataset_type": "timeseries",
+    "total_columns": 6,
+    "inspected_columns": [
+      {
+        "column_name": "elapsed_seconds",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.49 < 0.6)",
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": 0.0,
+          "max": 315.0,
+          "mean": 157.5,
+          "std": 95.4673
+        }
+      },
+      {
+        "column_name": "V_cell",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.49 < 0.6)",
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": 2.5,
+          "max": 4.19,
+          "mean": 3.4119,
+          "std": 0.4433
+        }
+      },
+      {
+        "column_name": "I_applied",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.49 < 0.6)",
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": -1.01,
+          "max": 0.0,
+          "mean": -0.9674,
+          "std": 0.1798
+        }
+      },
+      {
+        "column_name": "T_surface",
+        "candidate_canonical": "time",
+        "confidence": 0.815,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 1.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.815
+        },
+        "is_ambiguous": false,
+        "is_rejected": false,
+        "rejection_reason": null,
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": 24.7,
+          "max": 28.7,
+          "mean": 27.1613,
+          "std": 1.2693
+        }
+      },
+      {
+        "column_name": "mystery_signal",
+        "candidate_canonical": "time",
+        "confidence": 0.815,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 1.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.5,
+          "total_score": 0.815
+        },
+        "is_ambiguous": true,
+        "is_rejected": false,
+        "rejection_reason": "Column name contains ambiguous keyword: 'mystery'",
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": 124.2,
+          "max": 131.5,
+          "mean": 127.8742,
+          "std": 2.0399
+        }
+      },
+      {
+        "column_name": "coulombic_efficiency",
+        "candidate_canonical": null,
+        "confidence": 0.49,
+        "evidence": {
+          "metadata_match": 0.9,
+          "unit_plausibility": 0.0,
+          "value_range": 0.7,
+          "cross_column_consistency": 0.0,
+          "total_score": 0.49
+        },
+        "is_ambiguous": true,
+        "is_rejected": true,
+        "rejection_reason": "Insufficient evidence (score=0.49 < 0.6)",
+        "value_stats": {
+          "type": "numeric",
+          "count": 31,
+          "missing_ratio": 0.0,
+          "min": 0.97,
+          "max": 0.99,
+          "mean": 0.98,
+          "std": 0.0073
+        }
+      }
+    ],
+    "required_fields_status": {
+      "time": "FOUND",
+      "voltage_measured": "MISSING",
+      "current_measured": "MISSING",
+      "temperature_measured": "MISSING"
+    },
+    "overall_confidence": 0.815,
+    "halt_recommended": true,
+    "halt_reason": "Missing required fields: ['voltage_measured', 'current_measured', 'temperature_measured']",
+    "ambiguous_fields": [
+      "elapsed_seconds",
+      "V_cell",
+      "I_applied",
+      "mystery_signal",
+      "coulombic_efficiency"
+    ],
+    "rejected_fields": [
+      "elapsed_seconds",
+      "V_cell",
+      "I_applied",
+      "coulombic_efficiency"
+    ]
+  }
+}

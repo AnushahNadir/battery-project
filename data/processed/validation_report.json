@@ -1,0 +1,22 @@
+{
+  "schema_ok": true,
+  "physics_ok": false,
+  "structure_ok": true,
+  "issues": [
+    "Voltage outside expected range in 'voltage_load': min=0.000 max=4.202 expected [1.5,6.0]"
+  ],
+  "metrics": {
+    "missing_ratio_required": 0.0,
+    "time_monotonic_fraction": 1.0,
+    "voltage_measured_min": 2.694074478000972,
+    "voltage_measured_max": 4.187344026387161,
+    "voltage_load_min": 0.0,
+    "voltage_load_max": 4.202,
+    "current_measured_min": -2.0160230713598764,
+    "current_measured_max": 0.0037933120349866,
+    "current_load_min": -1.9984,
+    "current_load_max": -0.0006,
+    "temperature_measured_min": 24.21658146702539,
+    "temperature_measured_max": 38.165816144899125
+  }
+}

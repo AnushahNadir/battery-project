@@ -1,0 +1,9 @@
+{
+  "n_rows": 2422,
+  "n_batteries": 7,
+  "n_events": 6,
+  "event_rate": 0.002477,
+  "horizon": 20,
+  "model_type": "kaplan_meier_grouped",
+  "notes": []
+}

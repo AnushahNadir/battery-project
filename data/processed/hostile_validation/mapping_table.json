@@ -1,0 +1,356 @@
+{
+  "metadata_mapping": {
+    "source_path": "d:\\Energy Project\\code\\battery-project3\\data\\raw\\hostile\\hostile_metadata.csv",
+    "dataset_type": "metadata",
+    "mappings": [
+      {
+        "source_column": "cell_identifier",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "unique id for each cell tested",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "operation_mode",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "type of operation (charge/discharge/impedance)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "timestamp_start",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "when the operation began",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "env_temp_celsius",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "celsius",
+          "readme_description": "ambient temperature in celsius",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "discharge_capacity_ah",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "amperes",
+          "readme_description": "measured discharge capacity in amp-hours",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "mystery_column",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "internal sensor reading (proprietary, units unknown)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "ohmic_resistance",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "ohms",
+          "readme_description": "dc resistance measurement in ohms",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "voltage_ratio",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "computed ratio (internal use only)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "data_file",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "reference to time-series data file",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      }
+    ],
+    "summary": {
+      "total": 9,
+      "accepted": 0,
+      "rejected": 9,
+      "ambiguous": 0
+    }
+  },
+  "timeseries_mapping": {
+    "source_path": "d:\\Energy Project\\code\\battery-project3\\data\\raw\\hostile\\timeseries\\TS001.csv",
+    "dataset_type": "timeseries",
+    "mappings": [
+      {
+        "source_column": "elapsed_seconds",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "time since start of operation",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "V_cell",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "volts",
+          "readme_description": "cell voltage in volts",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "I_applied",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "amperes",
+          "readme_description": "applied current in amperes (negative = discharge)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "T_surface",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.4,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": "celsius",
+          "readme_description": "surface temperature in celsius",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.4
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "mystery_signal",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "acoustic emission sensor (arbitrary units)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      },
+      {
+        "source_column": "coulombic_efficiency",
+        "target_canonical": null,
+        "decision": "REJECTED",
+        "confidence": 0.25,
+        "evidence": {
+          "readme_mention": true,
+          "readme_unit_hint": null,
+          "readme_description": "real-time efficiency estimate (dimensionless)",
+          "value_range_match": false,
+          "value_range_score": 0.0,
+          "unit_consistency": false,
+          "synonym_match": false,
+          "synonym_matched": null,
+          "cross_column_support": false,
+          "cross_column_detail": null,
+          "evidence_count": 1,
+          "total_score": 0.25
+        },
+        "justification": "REJECTED: Insufficient evidence types (1 < 2)",
+        "rejection_reason": "Insufficient evidence types (1 < 2)"
+      }
+    ],
+    "summary": {
+      "total": 6,
+      "accepted": 0,
+      "rejected": 6,
+      "ambiguous": 0
+    }
+  }
+}

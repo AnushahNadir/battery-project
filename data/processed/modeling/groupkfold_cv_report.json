@@ -1,0 +1,57 @@
+{
+  "strategy": "GroupKFold(groups=battery_id)",
+  "group_column": "battery_id",
+  "n_splits": 5,
+  "n_batteries": 25,
+  "mean_rmse": 50.14068650944613,
+  "std_rmse": 9.478414365910401,
+  "mean_mae": 33.53130616227355,
+  "std_mae": 4.796372519270363,
+  "folds": [
+    {
+      "fold_index": 1,
+      "n_train_rows": 2963,
+      "n_val_rows": 986,
+      "n_train_batteries": 24,
+      "n_val_batteries": 1,
+      "rmse": 68.14762507699109,
+      "mae": 42.81788851887802
+    },
+    {
+      "fold_index": 2,
+      "n_train_rows": 3040,
+      "n_val_rows": 909,
+      "n_train_batteries": 24,
+      "n_val_batteries": 1,
+      "rmse": 50.812979971538056,
+      "mae": 31.74373936150387
+    },
+    {
+      "fold_index": 3,
+      "n_train_rows": 3275,
+      "n_val_rows": 674,
+      "n_train_batteries": 18,
+      "n_val_batteries": 7,
+      "rmse": 46.238280158636236,
+      "mae": 32.78761257788509
+    },
+    {
+      "fold_index": 4,
+      "n_train_rows": 3260,
+      "n_val_rows": 689,
+      "n_train_batteries": 17,
+      "n_val_batteries": 8,
+      "rmse": 42.53569171451529,
+      "mae": 31.207132757975753
+    },
+    {
+      "fold_index": 5,
+      "n_train_rows": 3258,
+      "n_val_rows": 691,
+      "n_train_batteries": 17,
+      "n_val_batteries": 8,
+      "rmse": 42.968855625549956,
+      "mae": 29.10015759512502
+    }
+  ]
+}

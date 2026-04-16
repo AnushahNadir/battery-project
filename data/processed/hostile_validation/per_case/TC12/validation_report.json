@@ -1,0 +1,72 @@
+{
+  "warnings": [
+    "Schema drift remapped columns: cycle_index->time, voltage_average->voltage_measured, current_average->current_measured, temperature_avg->temperature_measured, current_minimum->current_load, voltage_minimum->voltage_load"
+  ],
+  "errors": [],
+  "schema": {
+    "warnings": [],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": true,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.202,
+      "voltage_measured_max": 3.697,
+      "voltage_load_min": 2.507,
+      "voltage_load_max": 2.8,
+      "current_measured_abs_min": 1.511,
+      "current_measured_abs_max": 2.476,
+      "current_load_abs_min": 0.801,
+      "current_load_abs_max": 1.451,
+      "temperature_measured_min": 20.2,
+      "temperature_measured_max": 27.97
+    }
+  },
+  "validation": {
+    "warnings": [],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": true,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.202,
+      "voltage_measured_max": 3.697,
+      "voltage_load_min": 2.507,
+      "voltage_load_max": 2.8,
+      "current_measured_abs_min": 1.511,
+      "current_measured_abs_max": 2.476,
+      "current_load_abs_min": 0.801,
+      "current_load_abs_max": 1.451,
+      "temperature_measured_min": 20.2,
+      "temperature_measured_max": 27.97
+    }
+  },
+  "mapping": {
+    "warnings": [
+      "Schema drift remapped columns: cycle_index->time, voltage_average->voltage_measured, current_average->current_measured, temperature_avg->temperature_measured, current_minimum->current_load, voltage_minimum->voltage_load"
+    ],
+    "errors": [],
+    "rename_map": {
+      "cycle_index": "time",
+      "voltage_average": "voltage_measured",
+      "current_average": "current_measured",
+      "temperature_avg": "temperature_measured",
+      "current_minimum": "current_load",
+      "voltage_minimum": "voltage_load"
+    },
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 1.0
+  },
+  "extra_checks": {
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "capacity_median": 1.8131,
+      "duplicate_time_count": 0.0
+    }
+  }
+}

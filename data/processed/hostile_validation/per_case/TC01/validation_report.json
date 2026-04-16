@@ -1,0 +1,72 @@
+{
+  "warnings": [
+    "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+  ],
+  "errors": [],
+  "schema": {
+    "warnings": [],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": true,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.202,
+      "voltage_measured_max": 3.697,
+      "voltage_load_min": 2.501,
+      "voltage_load_max": 2.794,
+      "current_measured_abs_min": 1.5,
+      "current_measured_abs_max": 2.494,
+      "current_load_abs_min": 0.803,
+      "current_load_abs_max": 1.495,
+      "temperature_measured_min": 20.19,
+      "temperature_measured_max": 27.96
+    }
+  },
+  "validation": {
+    "warnings": [],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": true,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.202,
+      "voltage_measured_max": 3.697,
+      "voltage_load_min": 2.501,
+      "voltage_load_max": 2.794,
+      "current_measured_abs_min": 1.5,
+      "current_measured_abs_max": 2.494,
+      "current_load_abs_min": 0.803,
+      "current_load_abs_max": 1.495,
+      "temperature_measured_min": 20.19,
+      "temperature_measured_max": 27.96
+    }
+  },
+  "mapping": {
+    "warnings": [
+      "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+    ],
+    "errors": [],
+    "rename_map": {
+      "cycle_index": "time",
+      "v_mean": "voltage_measured",
+      "i_mean": "current_measured",
+      "temp_mean": "temperature_measured",
+      "i_min": "current_load",
+      "v_min": "voltage_load"
+    },
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 1.0
+  },
+  "extra_checks": {
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "capacity_median": 1.6993,
+      "duplicate_time_count": 0.0
+    }
+  }
+}
