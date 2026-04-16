@@ -1,0 +1,81 @@
+{
+  "warnings": [
+    "Too many missing values in required cols: 0.333 > 0.1",
+    "Too many missing values in required cols: 0.333 > 0.1",
+    "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+  ],
+  "errors": [
+    "Current column 'current_measured' has no numeric values",
+    "Current column 'current_load' has no numeric values",
+    "Current column 'current_measured' has no numeric values",
+    "Current column 'current_load' has no numeric values"
+  ],
+  "schema": {
+    "warnings": [
+      "Too many missing values in required cols: 0.333 > 0.1"
+    ],
+    "errors": [
+      "Current column 'current_measured' has no numeric values",
+      "Current column 'current_load' has no numeric values"
+    ],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.3333333333333333,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.204,
+      "voltage_measured_max": 3.675,
+      "voltage_load_min": 2.515,
+      "voltage_load_max": 2.782,
+      "temperature_measured_min": 20.02,
+      "temperature_measured_max": 27.77
+    }
+  },
+  "validation": {
+    "warnings": [
+      "Too many missing values in required cols: 0.333 > 0.1"
+    ],
+    "errors": [
+      "Current column 'current_measured' has no numeric values",
+      "Current column 'current_load' has no numeric values"
+    ],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.3333333333333333,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.204,
+      "voltage_measured_max": 3.675,
+      "voltage_load_min": 2.515,
+      "voltage_load_max": 2.782,
+      "temperature_measured_min": 20.02,
+      "temperature_measured_max": 27.77
+    }
+  },
+  "mapping": {
+    "warnings": [
+      "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+    ],
+    "errors": [],
+    "rename_map": {
+      "cycle_index": "time",
+      "v_mean": "voltage_measured",
+      "i_mean": "current_measured",
+      "temp_mean": "temperature_measured",
+      "i_min": "current_load",
+      "v_min": "voltage_load"
+    },
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 1.0
+  },
+  "extra_checks": {
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "capacity_median": 1.8218,
+      "duplicate_time_count": 0.0
+    }
+  }
+}

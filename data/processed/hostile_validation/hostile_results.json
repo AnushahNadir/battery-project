@@ -1,0 +1,21 @@
+{
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "pass_rate": 1.0,
+  "cases": [
+    {
+      "tc_id": "TC08",
+      "description": "30% NaN in key columns",
+      "failure_mode": "corrupt_values",
+      "expected_outcome": "any",
+      "result": "PASS",
+      "passed": true,
+      "confidence_mean": 0.8266666666666664,
+      "warnings": 3,
+      "errors": 0,
+      "detail": "Handled gracefully [detected]. confidence=0.827, errors=0, warnings=3"
+    }
+  ]
+}

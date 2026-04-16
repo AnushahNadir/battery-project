@@ -1,0 +1,11 @@
+{
+  "confidence": 0.85,
+  "components": {
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 0.75,
+    "validation_score": 0.75
+  },
+  "notes": [
+    "Physics validation failed"
+  ]
+}

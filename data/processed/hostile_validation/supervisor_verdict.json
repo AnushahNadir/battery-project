@@ -1,0 +1,138 @@
+{
+  "verdict": "FAIL",
+  "verdict_reason": "Schema Inspector HALTED execution: Required fields with low confidence: ['battery_id', 'type', 'filename']; Missing required fields: ['voltage_measured', 'current_measured', 'temperature_measured']",
+  "hallucination_detected": false,
+  "hallucination_details": "No hallucination - system correctly rejected hostile dataset",
+  "hallucination_indicators": [
+    {
+      "indicator_id": "H001",
+      "description": "String similarity used as sole evidence",
+      "triggered": false,
+      "evidence": "No mappings based on string similarity alone",
+      "severity": "CRITICAL"
+    },
+    {
+      "indicator_id": "H002",
+      "description": "Mapping accepted without README/documentation evidence",
+      "triggered": false,
+      "evidence": "All accepted mappings have README evidence",
+      "severity": "HIGH"
+    },
+    {
+      "indicator_id": "H003",
+      "description": "Value range outside physical bounds but mapping accepted",
+      "triggered": false,
+      "evidence": "No range violations in accepted mappings",
+      "severity": "CRITICAL"
+    },
+    {
+      "indicator_id": "H004",
+      "description": "Ambiguous column mapped without explicit disambiguation",
+      "triggered": false,
+      "evidence": "No ambiguous columns were mapped",
+      "severity": "HIGH"
+    },
+    {
+      "indicator_id": "H005",
+      "description": "Required field missing but processing continued",
+      "triggered": false,
+      "evidence": "All missing required fields triggered halt recommendation",
+      "severity": "CRITICAL"
+    },
+    {
+      "indicator_id": "H006",
+      "description": "Non-canonical field accepted as canonical",
+      "triggered": false,
+      "evidence": "No non-canonical columns accepted",
+      "severity": "CRITICAL"
+    },
+    {
+      "indicator_id": "H007",
+      "description": "Confidence below threshold but mapping accepted",
+      "triggered": false,
+      "evidence": "All accepted mappings have sufficient confidence",
+      "severity": "HIGH"
+    },
+    {
+      "indicator_id": "H008",
+      "description": "Distribution anomaly ignored",
+      "triggered": false,
+      "evidence": "Distribution anomalies properly flagged",
+      "severity": "MEDIUM"
+    },
+    {
+      "indicator_id": "H009",
+      "description": "Unit mismatch detected but not flagged",
+      "triggered": false,
+      "evidence": "Unit mismatches properly flagged",
+      "severity": "HIGH"
+    },
+    {
+      "indicator_id": "H010",
+      "description": "Negative control column incorrectly accepted",
+      "triggered": false,
+      "evidence": "All negative control columns correctly rejected",
+      "severity": "CRITICAL"
+    }
+  ],
+  "agent_reviews": {
+    "schema_inspector": {
+      "status": "OK",
+      "metadata_halt_recommended": true,
+      "metadata_halt_reason": "Required fields with low confidence: ['battery_id', 'type', 'filename']",
+      "metadata_ambiguous_fields": [
+        "operation_mode",
+        "env_temp_celsius",
+        "mystery_column",
+        "voltage_ratio"
+      ],
+      "metadata_rejected_fields": [
+        "cell_identifier",
+        "operation_mode",
+        "timestamp_start",
+        "env_temp_celsius",
+        "mystery_column",
+        "voltage_ratio",
+        "data_file"
+      ],
+      "timeseries_halt_recommended": true,
+      "timeseries_halt_reason": "Missing required fields: ['voltage_measured', 'current_measured', 'temperature_measured']",
+      "timeseries_ambiguous_fields": [
+        "elapsed_seconds",
+        "V_cell",
+        "I_applied",
+        "mystery_signal",
+        "coulombic_efficiency"
+      ],
+      "timeseries_rejected_fields": [
+        "elapsed_seconds",
+        "V_cell",
+        "I_applied",
+        "coulombic_efficiency"
+      ]
+    },
+    "semantic_mapper": {
+      "status": "OK",
+      "metadata_accepted": 0,
+      "metadata_rejected": 9,
+      "metadata_ambiguous": 0,
+      "timeseries_accepted": 0,
+      "timeseries_rejected": 6,
+      "timeseries_ambiguous": 0,
+      "rejection_ratio": 1.0
+    },
+    "validation_gating": {
+      "status": "OK",
+      "metadata_decision": "PASS",
+      "metadata_errors": 0,
+      "metadata_warnings": 0,
+      "timeseries_decision": "PASS",
+      "timeseries_errors": 0,
+      "timeseries_warnings": 0
+    }
+  },
+  "recommendations": [
+    "System performed correctly - no issues detected"
+  ],
+  "timestamp": "2026-02-02T14:56:07.515297"
+}

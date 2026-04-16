@@ -1,0 +1,78 @@
+{
+  "warnings": [
+    "Current magnitude outside expected range in 'current_measured': abs_min=2.011 abs_max=4.999 expected [0.5,4.0]",
+    "Current magnitude outside expected range in 'current_measured': abs_min=2.011 abs_max=4.999 expected [0.5,4.0]",
+    "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+  ],
+  "errors": [],
+  "schema": {
+    "warnings": [
+      "Current magnitude outside expected range in 'current_measured': abs_min=2.011 abs_max=4.999 expected [0.5,4.0]"
+    ],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.152,
+      "voltage_measured_max": 3.349,
+      "voltage_load_min": 2.801,
+      "voltage_load_max": 2.999,
+      "current_measured_abs_min": 2.011,
+      "current_measured_abs_max": 4.999,
+      "current_load_abs_min": 1.033,
+      "current_load_abs_max": 2.497,
+      "temperature_measured_min": 22.04,
+      "temperature_measured_max": 30.0
+    }
+  },
+  "validation": {
+    "warnings": [
+      "Current magnitude outside expected range in 'current_measured': abs_min=2.011 abs_max=4.999 expected [0.5,4.0]"
+    ],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.152,
+      "voltage_measured_max": 3.349,
+      "voltage_load_min": 2.801,
+      "voltage_load_max": 2.999,
+      "current_measured_abs_min": 2.011,
+      "current_measured_abs_max": 4.999,
+      "current_load_abs_min": 1.033,
+      "current_load_abs_max": 2.497,
+      "temperature_measured_min": 22.04,
+      "temperature_measured_max": 30.0
+    }
+  },
+  "mapping": {
+    "warnings": [
+      "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+    ],
+    "errors": [],
+    "rename_map": {
+      "cycle_index": "time",
+      "v_mean": "voltage_measured",
+      "i_mean": "current_measured",
+      "temp_mean": "temperature_measured",
+      "i_min": "current_load",
+      "v_min": "voltage_load"
+    },
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 1.0
+  },
+  "extra_checks": {
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "capacity_median": 2.10665,
+      "duplicate_time_count": 0.0
+    }
+  }
+}

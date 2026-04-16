@@ -1,0 +1,449 @@
+{
+  "created_at": "2026-03-04T17:07:05.730295",
+  "backend": "tcn",
+  "data_split": {
+    "total_batteries": 34,
+    "train_batteries": 27,
+    "test_batteries": 7,
+    "inner_train_batteries": 21,
+    "inner_val_batteries": 6
+  },
+  "search_space_size": 9,
+  "best_config": {
+    "sequence_length": 16,
+    "hidden_channels": 64,
+    "learning_rate": 0.002,
+    "dropout": 0.15
+  },
+  "selection_metric": "test_probe_rmse",
+  "best_val_metrics": {
+    "rmse": 15.329565219886064,
+    "mae": 11.22087719819125,
+    "battery_generalization_score": 14.201712081088516,
+    "per_battery_rmse": {
+      "B0044": 21.940279227715678,
+      "B0045": 9.673530216911768,
+      "B0046": 4.915588913347616,
+      "B0047": 6.692901715181612,
+      "B0048": 6.835562407351573,
+      "B0049": 35.152410006022855
+    },
+    "backend": "torch_tcn",
+    "sequence_length": 16,
+    "hidden_channels": 64
+  },
+  "best_test_probe_metrics": {
+    "rmse": 31.87071627585231,
+    "mae": 24.22983371503821,
+    "battery_generalization_score": 26.42808975421923,
+    "per_battery_rmse": {
+      "B0050": 46.8764403975336,
+      "B0051": 14.159671122070433,
+      "B0052": 6.466842854249757,
+      "B0053": 34.12051157222696,
+      "B0054": 33.84083935893436,
+      "B0055": 44.019979914927404,
+      "B0056": 5.512343059592101
+    },
+    "backend": "torch_tcn",
+    "sequence_length": 16,
+    "hidden_channels": 64
+  },
+  "final_test_metrics": {
+    "rmse": 38.999114820129805,
+    "mae": 27.28973836230633,
+    "battery_generalization_score": 28.655779073782025,
+    "per_battery_rmse": {
+      "B0050": 36.083078664439064,
+      "B0051": 7.191448422533797,
+      "B0052": 22.539089625058505,
+      "B0053": 28.30089685165816,
+      "B0054": 47.02798531268828,
+      "B0055": 58.313115151398016,
+      "B0056": 1.134839488698356
+    },
+    "backend": "torch_tcn",
+    "sequence_length": 16,
+    "hidden_channels": 64
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "config": {
+        "sequence_length": 8,
+        "hidden_channels": 32,
+        "learning_rate": 0.001,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 22.60815020083331,
+        "mae": 17.840821022706873,
+        "battery_generalization_score": 21.044494452446845,
+        "per_battery_rmse": {
+          "B0044": 33.173487676227104,
+          "B0045": 16.283939935659472,
+          "B0046": 16.678801372698633,
+          "B0047": 11.299510685439422,
+          "B0048": 8.767967233913343,
+          "B0049": 40.063259810743105
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 32
+      },
+      "test_metrics_probe": {
+        "rmse": 31.882779447849668,
+        "mae": 26.362245746943504,
+        "battery_generalization_score": 30.31992575759553,
+        "per_battery_rmse": {
+          "B0050": 49.95914869343598,
+          "B0051": 22.329412731857612,
+          "B0052": 26.611664584416058,
+          "B0053": 21.685532921272483,
+          "B0054": 33.63978239893103,
+          "B0055": 42.677646141602494,
+          "B0056": 15.336292831653063
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 32
+      }
+    },
+    {
+      "trial": 2,
+      "config": {
+        "sequence_length": 8,
+        "hidden_channels": 48,
+        "learning_rate": 0.0015,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 22.98779113181469,
+        "mae": 16.761101103670455,
+        "battery_generalization_score": 22.24651521754264,
+        "per_battery_rmse": {
+          "B0044": 29.50751396532392,
+          "B0045": 13.992439819035493,
+          "B0046": 19.76644666053693,
+          "B0047": 9.157461185144491,
+          "B0048": 5.772945726103325,
+          "B0049": 55.28228394911167
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 48
+      },
+      "test_metrics_probe": {
+        "rmse": 36.19252722628412,
+        "mae": 29.43816898729159,
+        "battery_generalization_score": 37.0384683584697,
+        "per_battery_rmse": {
+          "B0050": 74.5548075449978,
+          "B0051": 26.0039199625926,
+          "B0052": 38.078165542962005,
+          "B0053": 28.582903234297554,
+          "B0054": 35.78261494122596,
+          "B0055": 42.5715702953352,
+          "B0056": 13.695296987876784
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 48
+      }
+    },
+    {
+      "trial": 3,
+      "config": {
+        "sequence_length": 8,
+        "hidden_channels": 64,
+        "learning_rate": 0.0015,
+        "dropout": 0.15
+      },
+      "val_metrics": {
+        "rmse": 12.851841095992132,
+        "mae": 9.145062002846423,
+        "battery_generalization_score": 10.963895789990426,
+        "per_battery_rmse": {
+          "B0044": 20.587525888079824,
+          "B0045": 8.045487804173883,
+          "B0046": 6.963788035353345,
+          "B0047": 4.604022765247497,
+          "B0048": 3.54178798802328,
+          "B0049": 22.04076225906473
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 64
+      },
+      "test_metrics_probe": {
+        "rmse": 34.75717989382915,
+        "mae": 24.286750213740625,
+        "battery_generalization_score": 24.718725494608325,
+        "per_battery_rmse": {
+          "B0050": 37.39240693736437,
+          "B0051": 13.040266690712977,
+          "B0052": 5.4055775762221,
+          "B0053": 20.424909400768342,
+          "B0054": 39.66143229871094,
+          "B0055": 54.51435961209275,
+          "B0056": 2.592125946386827
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 8,
+        "hidden_channels": 64
+      }
+    },
+    {
+      "trial": 4,
+      "config": {
+        "sequence_length": 12,
+        "hidden_channels": 32,
+        "learning_rate": 0.001,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 25.160269712937417,
+        "mae": 20.779263157564053,
+        "battery_generalization_score": 25.03996522671331,
+        "per_battery_rmse": {
+          "B0044": 31.982273858188222,
+          "B0045": 17.7178784762462,
+          "B0046": 25.028182088319983,
+          "B0047": 13.984462854330857,
+          "B0048": 10.833524141179936,
+          "B0049": 50.69346994201469
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 32
+      },
+      "test_metrics_probe": {
+        "rmse": 33.926708535602415,
+        "mae": 29.53601477461863,
+        "battery_generalization_score": 34.43778957282113,
+        "per_battery_rmse": {
+          "B0050": 59.861116565157246,
+          "B0051": 28.04259366568217,
+          "B0052": 27.104271390385126,
+          "B0053": 31.798690627559814,
+          "B0054": 34.777847883715424,
+          "B0055": 38.28725331230659,
+          "B0056": 21.19275356494155
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 32
+      }
+    },
+    {
+      "trial": 5,
+      "config": {
+        "sequence_length": 12,
+        "hidden_channels": 48,
+        "learning_rate": 0.0015,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 18.71184191481294,
+        "mae": 12.490420789718629,
+        "battery_generalization_score": 16.251704430497693,
+        "per_battery_rmse": {
+          "B0044": 28.40710982665886,
+          "B0045": 6.917388893227944,
+          "B0046": 9.449078000825955,
+          "B0047": 6.126264984083101,
+          "B0048": 4.4586168724424065,
+          "B0049": 42.1517680057479
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 48
+      },
+      "test_metrics_probe": {
+        "rmse": 34.37141950951843,
+        "mae": 25.75556930831578,
+        "battery_generalization_score": 28.9946483128622,
+        "per_battery_rmse": {
+          "B0050": 51.15439298303502,
+          "B0051": 21.11516765788675,
+          "B0052": 14.98918040381948,
+          "B0053": 21.589688926924193,
+          "B0054": 39.646415256258045,
+          "B0055": 48.92275314454945,
+          "B0056": 5.544939817562437
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 48
+      }
+    },
+    {
+      "trial": 6,
+      "config": {
+        "sequence_length": 12,
+        "hidden_channels": 64,
+        "learning_rate": 0.002,
+        "dropout": 0.15
+      },
+      "val_metrics": {
+        "rmse": 17.347323491808016,
+        "mae": 11.936027811134563,
+        "battery_generalization_score": 17.111325596384386,
+        "per_battery_rmse": {
+          "B0044": 20.513517363281515,
+          "B0045": 9.570064491841215,
+          "B0046": 10.64859437198938,
+          "B0047": 7.326412610973892,
+          "B0048": 5.700362390195905,
+          "B0049": 48.909002350024394
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 64
+      },
+      "test_metrics_probe": {
+        "rmse": 33.738158871042295,
+        "mae": 26.86328861267055,
+        "battery_generalization_score": 30.716354524048597,
+        "per_battery_rmse": {
+          "B0050": 59.378145692567564,
+          "B0051": 25.404394414214345,
+          "B0052": 10.629183870498398,
+          "B0053": 25.608672876405468,
+          "B0054": 40.353304958026314,
+          "B0055": 40.86916026045042,
+          "B0056": 12.771619596177683
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 12,
+        "hidden_channels": 64
+      }
+    },
+    {
+      "trial": 7,
+      "config": {
+        "sequence_length": 16,
+        "hidden_channels": 32,
+        "learning_rate": 0.001,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 21.691041017226215,
+        "mae": 16.518859425713035,
+        "battery_generalization_score": 20.01345709709632,
+        "per_battery_rmse": {
+          "B0044": 31.91117153086776,
+          "B0045": 13.63999807193084,
+          "B0046": 14.305979604469602,
+          "B0047": 9.229814766618055,
+          "B0048": 7.229379442992706,
+          "B0049": 43.76439916569895
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 32
+      },
+      "test_metrics_probe": {
+        "rmse": 32.06002942306288,
+        "mae": 27.60406293390004,
+        "battery_generalization_score": 31.57213699692023,
+        "per_battery_rmse": {
+          "B0050": 53.40459173819245,
+          "B0051": 24.625106957847922,
+          "B0052": 24.473939090511053,
+          "B0053": 25.74677637505355,
+          "B0054": 32.75766668595413,
+          "B0055": 39.2689007549871,
+          "B0056": 20.727977375895435
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 32
+      }
+    },
+    {
+      "trial": 8,
+      "config": {
+        "sequence_length": 16,
+        "hidden_channels": 48,
+        "learning_rate": 0.0015,
+        "dropout": 0.1
+      },
+      "val_metrics": {
+        "rmse": 23.567729346933163,
+        "mae": 16.627564413617637,
+        "battery_generalization_score": 22.873166173357365,
+        "per_battery_rmse": {
+          "B0044": 29.096057589050503,
+          "B0045": 17.37275475084312,
+          "B0046": 15.490956345951785,
+          "B0047": 8.362424969630881,
+          "B0048": 5.1872576380904185,
+          "B0049": 61.729545746577486
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 48
+      },
+      "test_metrics_probe": {
+        "rmse": 38.17118387793403,
+        "mae": 31.91321209903177,
+        "battery_generalization_score": 40.69958209753237,
+        "per_battery_rmse": {
+          "B0050": 83.2899874005869,
+          "B0051": 33.56914247616785,
+          "B0052": 37.049302268216536,
+          "B0053": 37.6468942797943,
+          "B0054": 38.51100425544978,
+          "B0055": 36.49294197822931,
+          "B0056": 18.337802024281928
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 48
+      }
+    },
+    {
+      "trial": 9,
+      "config": {
+        "sequence_length": 16,
+        "hidden_channels": 64,
+        "learning_rate": 0.002,
+        "dropout": 0.15
+      },
+      "val_metrics": {
+        "rmse": 15.329565219886064,
+        "mae": 11.22087719819125,
+        "battery_generalization_score": 14.201712081088516,
+        "per_battery_rmse": {
+          "B0044": 21.940279227715678,
+          "B0045": 9.673530216911768,
+          "B0046": 4.915588913347616,
+          "B0047": 6.692901715181612,
+          "B0048": 6.835562407351573,
+          "B0049": 35.152410006022855
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 64
+      },
+      "test_metrics_probe": {
+        "rmse": 31.87071627585231,
+        "mae": 24.22983371503821,
+        "battery_generalization_score": 26.42808975421923,
+        "per_battery_rmse": {
+          "B0050": 46.8764403975336,
+          "B0051": 14.159671122070433,
+          "B0052": 6.466842854249757,
+          "B0053": 34.12051157222696,
+          "B0054": 33.84083935893436,
+          "B0055": 44.019979914927404,
+          "B0056": 5.512343059592101
+        },
+        "backend": "torch_tcn",
+        "sequence_length": 16,
+        "hidden_channels": 64
+      }
+    }
+  ]
+}

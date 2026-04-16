@@ -1,0 +1,78 @@
+{
+  "warnings": [
+    "Temperature outside expected range in 'temperature_measured': min=55.290 max=68.990 expected [4.0,44.0]",
+    "Temperature outside expected range in 'temperature_measured': min=55.290 max=68.990 expected [4.0,44.0]",
+    "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+  ],
+  "errors": [],
+  "schema": {
+    "warnings": [
+      "Temperature outside expected range in 'temperature_measured': min=55.290 max=68.990 expected [4.0,44.0]"
+    ],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.201,
+      "voltage_measured_max": 3.696,
+      "voltage_load_min": 2.504,
+      "voltage_load_max": 2.79,
+      "current_measured_abs_min": 1.513,
+      "current_measured_abs_max": 2.483,
+      "current_load_abs_min": 0.803,
+      "current_load_abs_max": 1.496,
+      "temperature_measured_min": 55.29,
+      "temperature_measured_max": 68.99
+    }
+  },
+  "validation": {
+    "warnings": [
+      "Temperature outside expected range in 'temperature_measured': min=55.290 max=68.990 expected [4.0,44.0]"
+    ],
+    "errors": [],
+    "schema_ok": true,
+    "physics_ok": false,
+    "structure_ok": true,
+    "metrics": {
+      "missing_ratio_required": 0.0,
+      "time_monotonic_fraction": 1.0,
+      "voltage_measured_min": 3.201,
+      "voltage_measured_max": 3.696,
+      "voltage_load_min": 2.504,
+      "voltage_load_max": 2.79,
+      "current_measured_abs_min": 1.513,
+      "current_measured_abs_max": 2.483,
+      "current_load_abs_min": 0.803,
+      "current_load_abs_max": 1.496,
+      "temperature_measured_min": 55.29,
+      "temperature_measured_max": 68.99
+    }
+  },
+  "mapping": {
+    "warnings": [
+      "Schema drift remapped columns: cycle_index->time, v_mean->voltage_measured, i_mean->current_measured, temp_mean->temperature_measured, i_min->current_load, v_min->voltage_load"
+    ],
+    "errors": [],
+    "rename_map": {
+      "cycle_index": "time",
+      "v_mean": "voltage_measured",
+      "i_mean": "current_measured",
+      "temp_mean": "temperature_measured",
+      "i_min": "current_load",
+      "v_min": "voltage_load"
+    },
+    "schema_match_ratio": 1.0,
+    "pattern_agreement_ratio": 1.0
+  },
+  "extra_checks": {
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "capacity_median": 1.8203,
+      "duplicate_time_count": 0.0
+    }
+  }
+}

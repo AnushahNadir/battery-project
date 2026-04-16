@@ -1,0 +1,34 @@
+{
+  "metadata_validation": {
+    "dataset_type": "metadata",
+    "decision": "PASS",
+    "decision_reason": "PASS: All physics and distribution checks passed",
+    "physics_checks": [],
+    "distribution_checks": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "timeseries_validation": {
+    "dataset_type": "timeseries",
+    "decision": "PASS",
+    "decision_reason": "PASS: All physics and distribution checks passed",
+    "physics_checks": [
+      {
+        "check_name": "time_monotonicity",
+        "column": "elapsed_seconds",
+        "passed": true,
+        "message": "Time column is monotonically increasing",
+        "severity": "INFO",
+        "expected": null,
+        "observed": null
+      }
+    ],
+    "distribution_checks": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0
+    }
+  }
+}

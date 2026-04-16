@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-03-05T11:03:12.894717",
+  "round": "optimization_round_2",
+  "selected_config": {
+    "sequence_length": 8,
+    "hidden_channels": 32,
+    "learning_rate": 0.001,
+    "dropout": 0.1,
+    "epochs": 60,
+    "batch_size": 64,
+    "use_log_target": false,
+    "huber_beta": 3.0,
+    "grad_clip": 1.0,
+    "lr_factor": 0.5,
+    "lr_patience": 4
+  },
+  "metrics": {
+    "xgboost_rmse": 36.97776248062611,
+    "sequence_rmse": 33.050504291889055,
+    "xgboost_mae": 27.08217582904381,
+    "sequence_mae": 26.091097156206768,
+    "relative_rmse_improvement_percent_vs_xgboost": 10.620594447256451,
+    "backend": "torch_tcn"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "completed_at": "2026-04-16T00:40:12.710158",
+  "output_dir": "D:\\battery\\battery-project3\\data\\processed\\modeling",
+  "metrics": {
+    "ml_rmse": 25.7353,
+    "stat_rmse": 130.1683,
+    "n_test_batteries": 7
+  },
+  "git_hash": "c5f0e6945b241931d399ee006a95acd088639dfb"
+}
