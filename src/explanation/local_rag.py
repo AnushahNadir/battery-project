@@ -2,8 +2,14 @@
 Local RAG system for battery degradation explanations.
 
 Retrieval : SentenceTransformer (all-MiniLM-L6-v2) + ChromaDB (persistent on disk)
-            Sources: data/knowledge_base/*.txt  +  any PDF folders you configure
-Generation: Llama 3.1 8B with 4-bit NF4 quantization (local weights, lazy load)
+            Sources: data/knowledge_base/*.txt  +  data/papers/*.pdf (and subfolders)
+Generation: Gemma 3-4B-it with 4-bit NF4 quantization (local weights, lazy load)
+
+Model weights live in:
+    models/gemma-3-4b-it/       ← LLM
+    models/all-MiniLM-L6-v2/    ← embeddings
+PDFs go in:
+    data/papers/                ← drop any PDF here and call reindex()
 
 First run  → processes all documents and saves the index to data/vector_db/
 Next runs  → loads the saved index in seconds (no re-processing)
@@ -17,19 +23,14 @@ from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-# ── Local model paths ──────────────────────────────────────────────────────────
-_LLM_BASE = (
-    r"F:\80_externalDisc\.cache\huggingface\hub"
-    r"\models--google--gemma-3-4b-it"
-)
-_MINILM_BASE = (
-    r"F:\80_externalDisc\.cache\huggingface\hub"
-    r"\models--sentence-transformers--all-MiniLM-L6-v2"
-)
+# ── Project-relative model paths (resolved at runtime from this file's location)
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_LLM_BASE     = str(_PROJECT_ROOT / "models" / "gemma-3-4b-it")
+_MINILM_BASE  = str(_PROJECT_ROOT / "models" / "all-MiniLM-L6-v2")
 
-# Default PDF folders to scan (add more paths here or via add_pdf_folder())
+# PDFs inside the project — drop files here, then call reindex()
 _DEFAULT_PDF_FOLDERS: List[str] = [
-    r"C:\Users\crono\Documents\Python\personal_projects\Projects\pdfExtractor\data",
+    str(_PROJECT_ROOT / "data" / "papers"),
 ]
 
 _COLLECTION_NAME = "battery_knowledge"

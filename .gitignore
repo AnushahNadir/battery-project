@@ -225,6 +225,9 @@ data/vector_db/
 data/calce/
 data/data.zip
 
+# Local model weights — too large for GitHub, each user brings their own
+models/
+
 # Outputs / artifacts
 experiments/*
 !experiments/.gitkeep
