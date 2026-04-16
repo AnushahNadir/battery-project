@@ -218,6 +218,13 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
+# ChromaDB vector index — generated locally on first run
+data/vector_db/
+
+# Raw dataset zips
+data/calce/
+data/data.zip
+
 # Outputs / artifacts
 experiments/*
 !experiments/.gitkeep

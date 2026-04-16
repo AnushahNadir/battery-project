@@ -37,6 +37,7 @@ survival    = load_csv(MDL / "survival_risk_predictions.csv")
 metrics     = load_json(TM  / "model_metrics.json") or {}
 conformal   = load_json(MDL / "conformal_coverage_report.json") or {}
 feat_imp    = load_json(MDL / "feature_importance.json") or []
+drift       = load_json(MDL / "drift_report.json") or {}
 hypotheses  = load_json(MDL / "degradation_hypotheses.json") or []
 counterfact = load_json(MDL / "counterfactual_examples.json") or []
 unc_metrics = load_json(MDL / "uncertainty_metrics.json") or {}
@@ -347,6 +348,145 @@ if view == "Battery Report":
             st.success(f"No anomalies detected for {selected} — degradation was smooth and predictable.")
     else:
         st.info("Anomaly detection only runs on test batteries.")
+
+    st.markdown("---")
+
+    # ── AI EXPLANATION (Local RAG) ────────────────────────────────────────────
+    st.subheader("AI Explanation")
+    st.caption("Grounded in domain knowledge — synthesizes RUL, risk and anomalies into one summary.")
+
+    @st.cache_resource
+    def _load_explainer():
+        import sys
+        sys.path.insert(0, str(BASE))
+        from src.explanation.explanation_builder import ExplanationBuilder
+        return ExplanationBuilder(BASE)
+
+    if bat_role == "TEST":
+        if st.button("Generate AI Summary", key="rag_generate_btn"):
+            with st.spinner("Generating explanation..."):
+                try:
+                    explainer = _load_explainer()
+                    ctx = []
+
+                    # ── 1. Latest cycle measurements ──────────────────────────
+                    if not df_b.empty:
+                        last = df_b.iloc[-1]
+                        ctx.append(
+                            f"LATEST CYCLE ({int(last['cycle_index'])}):\n"
+                            f"  Capacity: {last['capacity']:.4f} Ah "
+                            f"(initial: {last['init_capacity']:.4f} Ah, "
+                            f"EOL threshold: {last['eol_capacity_threshold']:.4f} Ah)\n"
+                            f"  Temp mean/max: {last['temp_mean']:.1f} / {last['temp_max']:.1f} °C\n"
+                            f"  Voltage mean/min: {last['v_mean']:.3f} / {last['v_min']:.3f} V\n"
+                            f"  Current min: {last['i_min']:.4f} A\n"
+                            f"  Energy: {last['energy_j']:.0f} J\n"
+                            f"  True RUL at this cycle: {int(last['RUL'])} cycles"
+                        )
+
+                    # ── 2. RUL prediction + uncertainty ───────────────────────
+                    if latest_rul is not None and not u_b.empty:
+                        lo = float(u_b["rul_lower_5"].iloc[-1]) if has_bands else None
+                        hi = float(u_b["rul_upper_95"].iloc[-1]) if has_bands else None
+                        interval = f" | 90% CI: [{lo:.0f}, {hi:.0f}]" if lo and hi else ""
+                        ctx.append(f"RUL PREDICTION: {latest_rul} cycles{interval}")
+
+                    # ── 3. Failure risk ───────────────────────────────────────
+                    if not s_b.empty and "failure_prob_horizon" in s_b.columns:
+                        last_s = s_b.iloc[-1]
+                        fp  = float(last_s["failure_prob_horizon"])
+                        rc  = str(last_s.get("risk_category", "UNKNOWN"))
+                        ctx.append(f"FAILURE RISK (next 20 cycles): {fp*100:.1f}% — {rc}")
+
+                    # ── 4. Anomalies ──────────────────────────────────────────
+                    if not a_b.empty:
+                        types = (
+                            ", ".join(sorted(a_b["anomaly_type"].unique()))
+                            if "anomaly_type" in a_b.columns else "unknown"
+                        )
+                        scores = a_b["anomaly_score"].astype(float) if "anomaly_score" in a_b.columns else None
+                        worst  = f" | worst score: {scores.max():.1f}" if scores is not None else ""
+                        ctx.append(f"ANOMALIES: {len(a_b)} anomalous cycles — types: {types}{worst}")
+                    else:
+                        ctx.append("ANOMALIES: none detected")
+
+                    # ── 5. Top feature importances ────────────────────────────
+                    if feat_imp:
+                        top5 = feat_imp[:5]
+                        fi_lines = "  |  ".join(
+                            f"{f['feature']} {f['importance']*100:.1f}% ({f.get('direction','')})"
+                            for f in top5
+                        )
+                        ctx.append(f"TOP PREDICTIVE FEATURES: {fi_lines}")
+
+                    # ── 6. Degradation hypotheses ─────────────────────────────
+                    if hypotheses:
+                        hyp_lines = "\n".join(
+                            f"  - {h['hypothesis_text']} "
+                            f"[confidence: {h.get('confidence', 0):.2f}]"
+                            for h in hypotheses[:4]
+                        )
+                        ctx.append(f"DEGRADATION HYPOTHESES (model-derived):\n{hyp_lines}")
+
+                    # ── 7. Counterfactuals for this battery ───────────────────
+                    bat_cf = [
+                        c for c in counterfact
+                        if str(c.get("observation_id", "")).startswith(selected)
+                    ]
+                    if bat_cf:
+                        cf_lines = "\n".join(
+                            f"  - If {c['counterfactual']['feature_changed']} changed "
+                            f"from {c['counterfactual']['original_value']:.3f} to "
+                            f"{c['counterfactual']['counterfactual_value']:.3f} → "
+                            f"RUL would change by {c['counterfactual']['predicted_rul_change']:+.1f} cycles"
+                            for c in bat_cf[:3]
+                        )
+                        ctx.append(f"COUNTERFACTUAL WHAT-IFS:\n{cf_lines}")
+
+                    # ── 8. Drift alerts ───────────────────────────────────────
+                    if drift:
+                        alerts = drift.get("alerts", [])
+                        status = drift.get("overall_status", "unknown")
+                        ctx.append(
+                            f"DATA DRIFT: overall status = {status}"
+                            + (f" | alerts: {', '.join(alerts)}" if alerts else "")
+                        )
+
+                    # ── 9. Model calibration ──────────────────────────────────
+                    if unc_metrics:
+                        ctx.append(
+                            f"MODEL CALIBRATION: "
+                            f"calibration score = {unc_metrics.get('calibration_score', 0):.3f} | "
+                            f"empirical 90% coverage = {unc_metrics.get('coverage_90_percent', 0):.1f}% | "
+                            f"mean uncertainty width = {unc_metrics.get('mean_uncertainty_width', 0):.1f} cycles"
+                        )
+
+                    extra_context = "\n\n".join(ctx)
+                    query = (
+                        f"Provide a concise but complete health summary for battery {selected}. "
+                        f"Using all the pipeline data provided, explain: "
+                        f"(1) the current degradation state based on capacity and measurements, "
+                        f"(2) what the RUL estimate and uncertainty mean physically, "
+                        f"(3) the failure risk level and operational implications, "
+                        f"(4) whether anomalies are concerning or expected given the degradation stage, "
+                        f"(5) which physical mechanisms are most likely driving the observed behavior."
+                    )
+
+                    answer, sources = explainer._rag.explain(query, extra_context=extra_context)
+
+                    if answer:
+                        st.markdown(
+                            f"<div style='background:#1F3A5F11;border-left:4px solid #1F3A5F;"
+                            f"padding:14px;border-radius:6px'>{answer}</div>",
+                            unsafe_allow_html=True,
+                        )
+                        if sources:
+                            st.caption("Sources: " + ", ".join(sources))
+
+                except Exception as exc:
+                    st.error(f"Explanation failed: {exc}")
+    else:
+        st.info("AI Explanation is only available for test batteries.")
 
     st.markdown("---")
 
