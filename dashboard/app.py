@@ -384,12 +384,29 @@ if view == "Battery Report":
                             f"  True RUL at this cycle: {int(last['RUL'])} cycles"
                         )
 
-                    # ── 2. RUL prediction + uncertainty ───────────────────────
+                    # ── 2. RUL prediction + uncertainty (per-battery) ────────
                     if latest_rul is not None and not u_b.empty:
                         lo = float(u_b["rul_lower_5"].iloc[-1]) if has_bands else None
                         hi = float(u_b["rul_upper_95"].iloc[-1]) if has_bands else None
-                        interval = f" | 90% CI: [{lo:.0f}, {hi:.0f}]" if lo and hi else ""
-                        ctx.append(f"RUL PREDICTION: {latest_rul} cycles{interval}")
+                        if lo is not None and hi is not None:
+                            width = hi - lo
+                            interval = (
+                                f" | 90% CI for THIS battery: [{lo:.0f}, {hi:.0f}] "
+                                f"(CI width = {width:.0f} cycles)"
+                            )
+                        else:
+                            interval = ""
+                        if latest_rul <= 0:
+                            rul_note = (
+                                f" WARNING: RUL <= 0 means this battery has ALREADY "
+                                f"reached or passed its end-of-life threshold. "
+                                f"Do NOT interpret the CI upper bound as remaining cycles — "
+                                f"the battery should be treated as at end-of-life NOW. "
+                                f"The CI reflects model uncertainty, not additional life."
+                            )
+                        else:
+                            rul_note = ""
+                        ctx.append(f"RUL PREDICTION: {latest_rul} cycles{interval}{rul_note}")
 
                     # ── 3. Failure risk ───────────────────────────────────────
                     if not s_b.empty and "failure_prob_horizon" in s_b.columns:
@@ -452,13 +469,15 @@ if view == "Battery Report":
                             + (f" | alerts: {', '.join(alerts)}" if alerts else "")
                         )
 
-                    # ── 9. Model calibration ──────────────────────────────────
+                    # ── 9. Model calibration (global stats, NOT per-battery) ──
                     if unc_metrics:
                         ctx.append(
-                            f"MODEL CALIBRATION: "
+                            f"MODEL CALIBRATION (global across all test batteries, "
+                            f"NOT specific to battery {selected}): "
                             f"calibration score = {unc_metrics.get('calibration_score', 0):.3f} | "
                             f"empirical 90% coverage = {unc_metrics.get('coverage_90_percent', 0):.1f}% | "
-                            f"mean uncertainty width = {unc_metrics.get('mean_uncertainty_width', 0):.1f} cycles"
+                            f"average CI width across all test batteries = "
+                            f"{unc_metrics.get('mean_uncertainty_width', 0):.1f} cycles"
                         )
 
                     extra_context = "\n\n".join(ctx)

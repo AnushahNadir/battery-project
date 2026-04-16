@@ -29,8 +29,8 @@ Battery lifetimes vary significantly across groups:
 - Some batteries reach 500+ cycles under gentle operating conditions
 This variability is the core challenge for RUL prediction: the model must generalize across different degradation rates.
 
-BATTERY B0036 NOTES
-Battery B0036 is discharged at 2A to 2.7V cutoff and charged at 1.5A CC/CV. It shows anomalous early-cycle degradation with higher than expected capacity variance in the first 30-50 cycles, likely due to initial formation cycling artifacts or temperature transients during early testing. The residual spike anomaly pattern (where observed RUL deviates strongly from model-predicted trend) in early cycles is consistent with this initial conditioning behavior, not necessarily indicative of an accelerated failure mode.
+EARLY-CYCLE BEHAVIOR IN DATASET BATTERIES
+Some batteries in the NASA/CALCE dataset show anomalous early-cycle behavior — higher than expected capacity variance in the first cycles — likely due to formation cycling artifacts or temperature transients during early testing. The residual spike anomaly pattern in early cycles is consistent with this initial conditioning behavior and is not necessarily indicative of accelerated failure. The specific protocol (discharge rate, cutoff voltage) differs across battery groups and determines absolute lifetime; consult the DISCHARGE PROTOCOLS section for group-specific details.
 
 KNOWN ANOMALIES IN THE DATASET
 - B0055: Shows unusual impedance growth pattern potentially due to manufacturing defect or test fixture issue. Uncertainty calibration for this battery tends to be overconfident (calibration set statistics do not represent its distribution well). LOBO (leave-one-battery-out) calibration is recommended.
