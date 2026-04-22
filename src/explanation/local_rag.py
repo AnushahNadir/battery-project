@@ -25,7 +25,9 @@ logger = logging.getLogger(__name__)
 
 # ── Project-relative model paths (resolved at runtime from this file's location)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
-_LLM_BASE     = str(_PROJECT_ROOT / "models" / "gemma-3-4b-it")
+# ── Switch model here — comment out the one you don't want ──────────────────
+# _LLM_BASE = str(_PROJECT_ROOT / "models" / "gemma-3-4b-it")        # Gemma 3 4B (smaller, faster)
+_LLM_BASE     = str(_PROJECT_ROOT / "models" / "llama-3.1-8b-instruct")  # Llama 3.1 8B (better instruction following)
 _MINILM_BASE  = str(_PROJECT_ROOT / "models" / "all-MiniLM-L6-v2")
 
 # PDFs inside the project — drop files here, then call reindex()
@@ -330,7 +332,7 @@ class BatteryRAG:
 
     # ── Generation ────────────────────────────────────────────────────────────
 
-    def generate_answer(self, prompt: str, max_new_tokens: int = 400) -> str:
+    def generate_answer(self, prompt: str, max_new_tokens: int = 800) -> str:
         import torch
 
         self._load_llm()
