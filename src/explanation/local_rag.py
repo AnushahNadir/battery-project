@@ -326,13 +326,14 @@ class BatteryRAG:
             "2. Use reference documents only for physical interpretation (mechanisms, context).\n"
             "3. Be concise and technical — the reader is an engineer or researcher.\n"
             "4. Cite which document supports each mechanistic claim.\n"
-            "5. Flag any contradictions or out-of-distribution signals explicitly.\n\n"
+            "5. Flag any contradictions or out-of-distribution signals explicitly.\n"
+            "6. Write exactly TWO short paragraphs. No headers, no bullet points. Maximum 150 words total.\n\n"
             "ANSWER:"
         )
 
     # ── Generation ────────────────────────────────────────────────────────────
 
-    def generate_answer(self, prompt: str, max_new_tokens: int = 800) -> str:
+    def generate_answer(self, prompt: str, max_new_tokens: int = 600) -> str:
         import torch
 
         self._load_llm()

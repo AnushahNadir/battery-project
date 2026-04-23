@@ -94,10 +94,8 @@ def build_context(battery_id, df, u_df, a_df, survival, metrics,
             f"LATEST CYCLE ({int(last['cycle_index'])}):\n"
             f"  Capacity: {cap_str} (initial: {init:.4f} Ah — capacity drop: {fade_str})\n"
             f"  EOL threshold: {eol_t:.4f} Ah — capacity is {eol_cmp}\n"
-            f"  Temp mean/max: {last['temp_mean']:.1f} / {last['temp_max']:.1f} °C\n"
             f"  Voltage mean/min: {last['v_mean']:.3f} / {last['v_min']:.3f} V\n"
             f"  Current min: {last['i_min']:.4f} A\n"
-            f"  Energy: {last['energy_j']:.0f} J\n"
             f"  True RUL at this cycle: {int(last['RUL'])} cycles"
         )
 
@@ -240,13 +238,10 @@ def main():
                 RUL_COL, has_bands
             )
             query = (
-                f"Provide a concise but complete health summary for battery {battery_id}. "
-                f"Using all the pipeline data provided, explain: "
-                f"(1) the current degradation state based on capacity and measurements, "
-                f"(2) what the RUL estimate and uncertainty mean physically, "
-                f"(3) the failure risk level and operational implications, "
-                f"(4) whether anomalies are concerning or expected given the degradation stage, "
-                f"(5) which physical mechanisms are most likely driving the observed behavior."
+                f"In exactly two short paragraphs (150 words total maximum), summarize the health of battery {battery_id}. "
+                f"Paragraph 1: capacity state and fade percentage, RUL estimate with CI bounds, and failure risk level. "
+                f"Paragraph 2: anomalies (if any), most likely degradation mechanism, and any contradictions between signals. "
+                f"No headers, no bullet points, two paragraphs only."
             )
             answer, sources = explainer._rag.explain(query, extra_context=extra_context)
             results[battery_id] = {
